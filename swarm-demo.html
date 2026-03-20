@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swarm</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #6b21a8;
+      gap: 48px;
+    }
+
+    h1 {
+      color: white;
+      font-family: sans-serif;
+      font-size: 3rem;
+      margin: 0;
+      letter-spacing: 0.05em;
+    }
+
+    /* Atom container */
+    .atom {
+      position: relative;
+      width: 180px;
+      height: 180px;
+    }
+
+    /* Nucleus */
+    .nucleus {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      margin: -11px 0 0 -11px;
+      background: radial-gradient(circle at 35% 35%, #f0e0ff, #c084fc);
+      border-radius: 50%;
+      box-shadow: 0 0 12px 4px rgba(192, 132, 252, 0.7);
+      z-index: 10;
+    }
+
+    /* Orbit ellipses */
+    .orbit {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border: 1.5px solid rgba(216, 180, 254, 0.45);
+      border-radius: 50%;
+    }
+
+    /* Orbit 1 — flat horizontal */
+    .orbit-1 {
+      width: 160px;
+      height: 60px;
+      margin: -30px 0 0 -80px;
+      transform: rotate(0deg);
+    }
+
+    /* Orbit 2 — tilted 60deg */
+    .orbit-2 {
+      width: 160px;
+      height: 60px;
+      margin: -30px 0 0 -80px;
+      transform: rotate(60deg);
+    }
+
+    /* Orbit 3 — tilted 120deg */
+    .orbit-3 {
+      width: 160px;
+      height: 60px;
+      margin: -30px 0 0 -80px;
+      transform: rotate(120deg);
+    }
+
+    /* Electron wrapper — rotates around the orbit */
+    .electron-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .orbit-1 .electron-wrapper { animation: spin 2.4s linear infinite; }
+    .orbit-2 .electron-wrapper { animation: spin 3.1s linear infinite reverse; }
+    .orbit-3 .electron-wrapper { animation: spin 2.0s linear infinite; }
+
+    /* Electron dot — sits at the top of the ellipse */
+    .electron {
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      margin-left: -5px;
+      background: radial-gradient(circle at 35% 35%, #ffffff, #a855f7);
+      border-radius: 50%;
+      box-shadow: 0 0 8px 3px rgba(168, 85, 247, 0.85);
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="atom">
+    <div class="nucleus"></div>
+
+    <div class="orbit orbit-1">
+      <div class="electron-wrapper">
+        <div class="electron"></div>
+      </div>
+    </div>
+
+    <div class="orbit orbit-2">
+      <div class="electron-wrapper">
+        <div class="electron"></div>
+      </div>
+    </div>
+
+    <div class="orbit orbit-3">
+      <div class="electron-wrapper">
+        <div class="electron"></div>
+      </div>
+    </div>
+  </div>
+
+  <h1>Swarm Test</h1>
+
+  <script>
+    window.addEventListener('load', () => {
+      if (!window.speechSynthesis) return;
+
+      const speak = () => {
+        const utter = new SpeechSynthesisUtterance('Swarm test confirmed. Cody online.');
+        utter.rate = 0.92;
+        utter.pitch = 0.95;
+        utter.volume = 1;
+
+        const voices = speechSynthesis.getVoices();
+        const preferred = voices.find(v =>
+          /samantha|karen|moira|daniel|google uk|en-gb|en-au/i.test(v.name + v.lang)
+        ) || voices.find(v => v.lang.startsWith('en'));
+
+        if (preferred) utter.voice = preferred;
+        speechSynthesis.speak(utter);
+      };
+
+      // Voices may not be loaded immediately
+      if (speechSynthesis.getVoices().length) {
+        speak();
+      } else {
+        speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+      }
+    });
+  </script>
+
+</body>
+</html>

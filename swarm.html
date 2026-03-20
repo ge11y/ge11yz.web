@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SWARM — ge11yz</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0a;
+      --card-bg: #111111;
+      --text: #f0f0f0;
+      --muted: #888888;
+      --accent: #00ff88;
+      --accent2: #a855f7;
+      --border: #222222;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header { margin-bottom: 50px; }
+    .back { color: var(--muted); font-size: 14px; margin-bottom: 20px; display: inline-block; }
+    .back:hover { color: var(--accent); text-decoration: none; }
+    h1 { font-size: 48px; font-weight: 900; letter-spacing: -2px; margin-bottom: 10px; }
+    h1 span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 18px; }
+
+    .demo-section { margin-bottom: 60px; }
+    .demo-label { font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+    .demo-frame {
+      width: 100%;
+      height: 420px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #6b21a8;
+      overflow: hidden;
+    }
+    .demo-frame iframe { width: 100%; height: 100%; border: none; }
+
+    .section { margin-bottom: 50px; }
+    h2 { font-size: 28px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+    h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); margin-top: 24px; }
+    p { color: var(--muted); margin-bottom: 16px; }
+    ul { color: var(--muted); padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 6px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card h3 { margin-top: 0; }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: center;
+      margin: 30px 0;
+    }
+    .arch-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .arch-box h4 { font-size: 16px; margin-bottom: 6px; }
+    .arch-box p { font-size: 13px; margin: 0; color: var(--muted); }
+    .arch-arrow { font-size: 24px; color: var(--accent); }
+
+    .tech-stack {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .tech-tag {
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .built-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .built-item:last-child { border-bottom: none; }
+    .built-icon { font-size: 28px; flex-shrink: 0; }
+    .built-info h4 { font-size: 16px; margin-bottom: 4px; }
+    .built-info p { margin: 0; font-size: 14px; }
+
+    .footer {
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <a href="/" class="back">← Back to ge11yz</a>
+      <h1>SW<span>A</span>RM</h1>
+      <p class="subtitle">Autonomous AI Swarm — KORE × CODY</p>
+    </header>
+
+    <!-- LIVE DEMO -->
+    <div class="demo-section">
+      <div class="demo-label">⚡ Live Demo — Built by the Swarm</div>
+      <div class="demo-frame">
+        <iframe src="swarm-demo.html" title="Swarm Demo" allow="autoplay"></iframe>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 10px;">
+        This page was conceptualized by a human, planned by <strong>KORE</strong> (Mac mini), and built by <strong>CODY</strong> (MacBook Pro) — autonomously, while you slept.
+      </p>
+    </div>
+
+    <!-- WHAT IS SWARM -->
+    <div class="section">
+      <h2>What is this?</h2>
+      <p>SWARM is an autonomous AI agent system. Two AI agents work together as a team — one supervises and plans, the other builds and executes. The human sets priorities, reviews results, and focuses on what matters.</p>
+      <p>It runs while you sleep. It builds while you work. You come home to finished work.</p>
+    </div>
+
+    <!-- ARCHITECTURE -->
+    <div class="section">
+      <h2>Architecture</h2>
+      <div class="architecture">
+        <div class="arch-box">
+          <h4>🤖 KORE</h4>
+          <p>Mac Mini — Supervisor<br/>Plans, routes, reviews, summarizes</p>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <h4>⚡ CODY</h4>
+          <p>MacBook Pro — Executor<br/>Builds, codes, ships, reports back</p>
+        </div>
+      </div>
+      <div class="tech-stack">
+        <span class="tech-tag">Tailscale (private network)</span>
+        <span class="tech-tag">SSH (passwordless)</span>
+        <span class="tech-tag">Claude Code CLI</span>
+        <span class="tech-tag">OpenClaw</span>
+        <span class="tech-tag">GitHub Pages</span>
+      </div>
+    </div>
+
+    <!-- WHAT'S BEEN BUILT -->
+    <div class="section">
+      <h2>What has the swarm built?</h2>
+
+      <div class="built-item">
+        <div class="built-icon">⚛️</div>
+        <div class="built-info">
+          <h4>Animated Atom Page</h4>
+          <p>Pure HTML/CSS animated atom with 3 orbiting electrons, Web Speech API voice readout, deep purple background. Built by CODY in one autonomous session.</p>
+        </div>
+      </div>
+
+      <div class="built-item">
+        <div class="built-icon">🧬</div>
+        <div class="built-info">
+          <h4>ORDIMUTANTSDB</h4>
+          <p>Bitcoin NFT collection database with satribute badge rendering, timeline view, modal detail view, and full search. Built iteratively by the swarm.</p>
+        </div>
+      </div>
+
+      <div class="built-item">
+        <div class="built-icon">🤖</div>
+        <div class="built-info">
+          <h4>Autonomous Swarm Infrastructure</h4>
+          <p>Full KORE × CODY setup: Tailscale private network, passwordless SSH, shared collab workspace, task queue, and automated dispatch scripts.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section">
+      <h2>How the daily cycle works</h2>
+
+      <div class="card">
+        <h3>🌅 Morning — Set Priorities</h3>
+        <p>Human reviews overnight output, adds new tasks via Telegram. KORE breaks them into buildable pieces and assigns to CODY.</p>
+      </div>
+
+      <div class="card">
+        <h3>☀️ Day — Swarm Builds</h3>
+        <p>CODY works autonomously on the MacBook Pro. Writes results to shared folder. KORE monitors progress and handles errors.</p>
+      </div>
+
+      <div class="card">
+        <h3>🌙 Evening — Review Complete Work</h3>
+        <p>Human comes home to finished tasks. Reviews outputs in Telegram. Redirects, approves, or assigns follow-ups.</p>
+      </div>
+    </div>
+
+    <!-- HOW TO BUILD -->
+    <div class="section">
+      <h2>How to build your own swarm</h2>
+      <p>You need two machines — one as supervisor, one as executor. Both connected to the internet. That's it.</p>
+
+      <h3>1. Set up the supervisor (KORE)</h3>
+      <ul>
+        <li>Machine: always-on computer (Mac mini works great)</li>
+        <li>Install OpenClaw and configure your primary AI model</li>
+        <li>This machine manages memory, planning, routing, and Telegram communication</li>
+      </ul>
+
+      <h3>2. Set up the executor (CODY)</h3>
+      <ul>
+        <li>Machine: portable laptop (MacBook Pro)</li>
+        <li>Install Claude Code CLI</li>
+        <li>Configure bypassPermissions mode for autonomous operation</li>
+      </ul>
+
+      <h3>3. Connect them with Tailscale</h3>
+      <ul>
+        <li>Install Tailscale on both machines</li>
+        <li>Sign into the same Tailnet</li>
+        <li>They can now reach each other from anywhere on the internet</li>
+      </ul>
+
+      <h3>4. Enable passwordless SSH</h3>
+      <ul>
+        <li>Generate an SSH key on KORE</li>
+        <li>Add the public key to CODY's ~/.ssh/authorized_keys</li>
+        <li>Now KORE can call CODY without a password</li>
+      </ul>
+
+      <h3>5. Define your workflow</h3>
+      <ul>
+        <li>Task queue: KORE writes tasks, CODY picks them up</li>
+        <li>Result folder: CODY writes output, KORE reads and summarizes</li>
+        <li>Review loop: Human approves or redirects via Telegram</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p>ge11yz.swarm — Built by KORE × CODY</p>
+      <p style="margin-top: 8px;">Supervisor: Mac Mini &nbsp;|&nbsp; Executor: MacBook Pro</p>
+    </div>
+
+  </div>
+</body>
+</html>
