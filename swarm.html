@@ -329,12 +329,10 @@
 
     // Projects data
     const PROJECTS = [
-      { name: 'Velorin Sales', desc: 'Team training portal with scripts, objections, closes, videos, and mindset content. Supabase-powered, invite-first workflow.', url: 'https://velorin-portal.vercel.app', color: '#00ff88', size: 0.18 },
-      { name: 'ORDIMUTANTSDB', desc: 'Bitcoin NFT collection database with satribute badge rendering, timeline/modal views, and full search.', url: 'https://ge11y.github.io/ORDIMUTANTSDB/', color: '#a855f7', size: 0.16 },
-      { name: 'Ask Gelly', desc: 'AI-powered Q&A assistant built with Vercel and OpenAI. Your personal knowledge base.', url: 'https://askge11y.vercel.app', color: '#60a5fa', size: 0.14 },
-      { name: 'Realize', desc: 'YouTube content generator and manager. Automates video ideation, scripting, and publishing workflow.', url: '#', color: '#f97316', size: 0.15 },
-      { name: 'ge11yz.com', desc: 'Main hub for all projects. The central nervous system of the ge11yz swarm.', url: 'https://ge11yz.com', color: '#00d4ff', size: 0.2 },
-      { name: 'SWARM Infra', desc: 'KORE × CODY autonomous agent system. Tailscale private network, SSH, shared workspace, task queue.', url: '#', color: '#fbbf24', size: 0.12 },
+      { name: 'ORDIMUTANTSDB', desc: 'Bitcoin NFT collection database with satribute badge rendering, timeline/modal views, and full search.', url: 'https://ge11y.github.io/ORDIMUTANTSDB/', color: '#a855f7', size: 0.18 },
+      { name: 'Ask Gelly', desc: 'AI-powered Q&A assistant built with Vercel and OpenAI. Your personal knowledge base.', url: 'https://askge11y.vercel.app', color: '#60a5fa', size: 0.16 },
+      { name: 'Realize', desc: 'YouTube content generator and manager. Automates video ideation, scripting, and publishing workflow.', url: '#', color: '#f97316', size: 0.17 },
+      { name: 'SWARM Infra', desc: 'KORE × CODY autonomous agent system. Tailscale private network, SSH, shared workspace, task queue.', url: '#', color: '#fbbf24', size: 0.15 },
     ];
 
     // Scene setup
@@ -365,14 +363,19 @@
     const light2 = new THREE.PointLight(0xa855f7, 1, 15);
     light2.position.set(5, 3, 2);
     scene.add(light2);
+    // Fill light for specular highlights
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    fillLight.position.set(5, 5, 5);
+    scene.add(fillLight);
 
     // Nucleus — pulsing core
     const nucleusGeo = new THREE.SphereGeometry(0.55, 64, 64);
-    const nucleusMat = new THREE.MeshPhongMaterial({
+    const nucleusMat = new THREE.MeshStandardMaterial({
       color: 0x00ff88,
       emissive: 0x00ff88,
-      emissiveIntensity: 0.8,
-      shininess: 100,
+      emissiveIntensity: 0.5,
+      metalness: 0.8,
+      roughness: 0.2,
     });
     const nucleus = new THREE.Mesh(nucleusGeo, nucleusMat);
     scene.add(nucleus);
@@ -416,19 +419,26 @@
 
       // Electron sphere
       const geo = new THREE.SphereGeometry(proj.size, 32, 32);
-      const mat = new THREE.MeshPhongMaterial({
+      const mat = new THREE.MeshStandardMaterial({
         color: proj.color,
         emissive: proj.color,
-        emissiveIntensity: 0.6,
-        shininess: 80,
+        emissiveIntensity: 0.4,
+        metalness: 0.5,
+        roughness: 0.3,
       });
       const mesh = new THREE.Mesh(geo, mat);
 
       // Glow
-      const glowGeo2 = new THREE.SphereGeometry(proj.size * 2, 16, 16);
-      const glowMat2 = new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.12, side: THREE.BackSide });
+      const glowGeo2 = new THREE.SphereGeometry(proj.size * 2.2, 16, 16);
+      const glowMat2 = new THREE.MeshBasicMaterial({ color: proj.color, transparent: true, opacity: 0.1, side: THREE.BackSide });
       const glow = new THREE.Mesh(glowGeo2, glowMat2);
       mesh.add(glow);
+      // Specular highlight dot
+      const specGeo = new THREE.SphereGeometry(proj.size * 0.25, 8, 8);
+      const specMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const spec = new THREE.Mesh(specGeo, specMat);
+      spec.position.set(proj.size * 0.4, proj.size * 0.4, proj.size * 0.3);
+      mesh.add(spec);
 
       scene.add(mesh);
       electrons.push({ mesh, proj, orbit, angle: angleOffset });
