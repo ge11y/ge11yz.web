@@ -3,66 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ge11yz.web</title>
+  <title>ge11yz.web | Project Hub</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-
+    
     :root {
-      --bg: #0a0a0a;
-      --card-bg: #111111;
-      --text: #f0f0f0;
-      --muted: #888888;
-      --accent: #00ff88;
-      --border: #222222;
+      --bg: #050808;
+      --card-bg: rgba(10, 20, 20, 0.7);
+      --text: #e0f7f4;
+      --muted: #6b8f8f;
+      --accent: #00e5cc;
+      --accent-glow: rgba(0, 229, 204, 0.4);
+      --border: rgba(0, 229, 204, 0.15);
     }
-
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
+      overflow-x: hidden;
     }
-
+    
+    #canvas-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    
     .container {
+      position: relative;
+      z-index: 1;
       max-width: 900px;
       margin: 0 auto;
       padding: 60px 20px;
     }
-
+    
     header {
       text-align: center;
       margin-bottom: 60px;
     }
-
+    
     .logo {
-      font-size: 48px;
+      font-size: 52px;
       font-weight: 900;
       letter-spacing: -2px;
       margin-bottom: 10px;
+      text-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
     }
-
+    
     .logo span {
       color: var(--accent);
-      display: inline-block;
-      transform: rotate(15deg);
+      text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent-glow);
     }
-
+    
     .tagline {
       color: var(--muted);
       font-size: 18px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
     }
-
+    
     .sites {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 20px;
     }
-
+    
     .site-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -71,107 +86,52 @@
       text-decoration: none;
       color: var(--text);
       transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
     }
-
+    
+    .site-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
     .site-card:hover {
       border-color: var(--accent);
       transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 229, 204, 0.15), 0 0 30px var(--accent-glow);
     }
-
+    
+    .site-card:hover::before {
+      opacity: 1;
+    }
+    
     .site-card h2 {
       font-size: 20px;
       font-weight: 700;
       margin-bottom: 8px;
     }
-
+    
     .site-card p {
       color: var(--muted);
       font-size: 14px;
     }
-
+    
     .site-card .arrow {
       display: inline-block;
       margin-top: 12px;
       color: var(--accent);
       font-size: 14px;
+      text-shadow: 0 0 10px var(--accent-glow);
     }
-
-    /* Featured project — stands out above the grid */
-    .featured-card {
-      display: block;
-      background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
-      border: 1px solid rgba(130, 140, 255, 0.25);
-      border-radius: 20px;
-      padding: 32px;
-      margin-bottom: 32px;
-      text-decoration: none;
-      color: var(--text);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .featured-card::before {
-      content: '';
-      position: absolute;
-      top: -1px;
-      left: -1px;
-      right: -1px;
-      bottom: -1px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(130,140,255,0.15), rgba(100,200,255,0.08), transparent);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .featured-card:hover {
-      border-color: rgba(130, 140, 255, 0.5);
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px rgba(130, 140, 255, 0.12), 0 0 40px rgba(130, 140, 255, 0.06);
-    }
-
-    .featured-card > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    .featured-badge {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(130, 140, 255, 0.7);
-      background: rgba(130, 140, 255, 0.08);
-      border: 1px solid rgba(130, 140, 255, 0.15);
-      border-radius: 6px;
-      padding: 3px 10px;
-      margin-bottom: 14px;
-    }
-
-    .featured-card h2 {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-    }
-
-    .featured-card .desc {
-      color: #999;
-      font-size: 14px;
-      line-height: 1.6;
-      max-width: 500px;
-    }
-
-    .featured-card .arrow {
-      display: inline-block;
-      margin-top: 16px;
-      color: rgba(130, 140, 255, 0.7);
-      font-size: 14px;
-      font-weight: 600;
-    }
-
+    
     footer {
       text-align: center;
       margin-top: 80px;
@@ -180,122 +140,137 @@
       color: var(--muted);
       font-size: 14px;
     }
-
+    
     footer a {
       color: var(--accent);
       text-decoration: none;
-    }
-
-    .profile-bubble {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 50px;
-      padding: 6px 14px 6px 6px;
-      transition: all 0.3s ease;
-      z-index: 100;
-    }
-
-    .profile-bubble:hover {
-      border-color: var(--accent);
-      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.1);
-    }
-
-    .profile-bubble img {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .profile-bubble span {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
+      text-shadow: 0 0 10px var(--accent-glow);
     }
   </style>
 </head>
 <body>
-  <a href="https://x.com/GE11YZ" target="_blank" class="profile-bubble">
-    <img src="mayc1.avif" alt="GE11YZ" />
-    <span>@GE11YZ</span>
-  </a>
-
+  <canvas id="canvas-bg"></canvas>
   <div class="container">
     <header>
-      <div class="logo">ge11y<span>z</span>.sites</div>
+      <div class="logo">ge11y<span>z</span>.web</div>
       <p class="tagline">Project Hub</p>
     </header>
-
-    <!-- Featured: REA1YZE -->
-    <a href="https://rea1yze.com" class="featured-card" target="_blank">
-      <span class="featured-badge">Featured Platform</span>
-      <h2>REA1YZE</h2>
-      <p class="desc">
-        A 3D realization engine that maps your thoughts, goals, and patterns into a living visual network.
-        Realize your thoughts. Analyze your patterns. See your mind.
-      </p>
-      <span class="arrow">Launch REA1YZE →</span>
-    </a>
-
+    
     <div class="sites">
       <a href="https://ge11y.github.io/ORDIMUTANTSDB/" class="site-card" target="_blank">
         <h2>🧬 OrdiMutants</h2>
-        <p>Bitcoin NFT Collection</p>
+        <p>Bitcoin NFT Collection - Browse, filter, and explore mutants inscribed on Bitcoin.</p>
         <span class="arrow">Visit →</span>
       </a>
-
-      <div class="site-card" style="opacity: 0.7; cursor: not-allowed;">
-        <h2>🌿 COR Integrative Health</h2>
-        <p style="font-size: 12px; margin-top: 8px;">Screening applications are temporarily unavailable while we pause submissions due to extended response times; for urgent questions or support, feel free to reach out to ge11yz on X.</p>
-        <span class="arrow">🚧</span>
-      </div>
-
-      <a href="https://projectportal.site" class="site-card" target="_blank">
-        <h2>🔗 PORTALS — NO LIMIT</h2>
-        <p>Portal Network — password-protected team portals</p>
+      
+      <a href="https://ge11y.github.io/CORE-INTEGRATIVE/" class="site-card" target="_blank">
+        <h2>🌿 KORE Integrative Health</h2>
+        <p>Holistic health & wellness - Whole-person care blending alternative medicine with modern approaches.</p>
         <span class="arrow">Visit →</span>
       </a>
-
-      <a href="https://askge11y.vercel.app" class="site-card" target="_blank">
-        <h2>🤖 Ask Gelly</h2>
-        <p>AI Sales Coaching — Pest Control</p>
+      
+      <a href="https://ge11y.github.io/team-portal/" class="site-card" target="_blank">
+        <h2>👥 Team Portal</h2>
+        <p>Team management and collaboration portal.</p>
         <span class="arrow">Visit →</span>
-      </a>
-
-      <a href="https://t0ph.art" class="site-card" target="_blank">
-        <h2>🎨 t0ph.art</h2>
-        <p>Digital Artist — Skulls & Drip On-Chain</p>
-        <span class="arrow">Visit →</span>
-      </a>
-      <a href="https://ogbe.art" class="site-card" target="_blank">
-        <h2>🎨 ogbe.art</h2>
-        <p>Bitcoin Ordinal Artist — EEGUN, IRO, FLUX & More</p>
-        <span class="arrow">Visit →</span>
-      </a>
-
-      <a href="https://aisess.xyz" class="site-card" target="_blank">
-        <h2>📊 AISESS</h2>
-        <p>AI Site Assessment — Instant valuation & analysis for any URL</p>
-        <span class="arrow">Visit →</span>
-      </a>
-
-      <a href="swarm.html" class="site-card">
-        <h2>⚡ SWARM</h2>
-        <p>Autonomous AI Swarm — KORE × CODY build system</p>
-        <span class="arrow">Explore →</span>
       </a>
     </div>
-
+    
     <footer>
       <p>More projects coming soon</p>
     </footer>
   </div>
+  
+  <script>
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height;
+    const CELL_SIZE = 40;
+    const TEAL_RGB = [0, 229, 204];
+    
+    let cells = [];
+    
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      initCells();
+    }
+    
+    function initCells() {
+      cells = [];
+      const cols = Math.ceil(width / CELL_SIZE) + 1;
+      const rows = Math.ceil(height / CELL_SIZE) + 1;
+      
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          cells.push({
+            x: i * CELL_SIZE,
+            y: j * CELL_SIZE,
+            baseAlpha: Math.random() * 0.15,
+            alpha: 0,
+            targetAlpha: 0,
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.01 + Math.random() * 0.02
+          });
+        }
+      }
+    }
+    
+    function drawCell(cell, time) {
+      const pulse = Math.sin(time * cell.speed + cell.phase);
+      cell.targetAlpha = cell.baseAlpha + pulse * 0.08;
+      cell.alpha += (cell.targetAlpha - cell.alpha) * 0.05;
+      
+      if (cell.alpha > 0.02) {
+        ctx.strokeStyle = `rgba(${TEAL_RGB[0]}, ${TEAL_RGB[1]}, ${TEAL_RGB[2]}, ${cell.alpha})`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cell.x, cell.y, CELL_SIZE, CELL_SIZE);
+        
+        if (cell.alpha > 0.12) {
+          const glowSize = 2;
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = `rgba(${TEAL_RGB[0]}, ${TEAL_RGB[1]}, ${TEAL_RGB[2]}, ${cell.alpha * 0.3})`;
+          ctx.fillStyle = `rgba(${TEAL_RGB[0]}, ${TEAL_RGB[1]}, ${TEAL_RGB[2]}, ${cell.alpha * 0.15})`;
+          ctx.fillRect(cell.x + glowSize, cell.y + glowSize, CELL_SIZE - glowSize * 2, CELL_SIZE - glowSize * 2);
+          ctx.shadowBlur = 0;
+        }
+      }
+    }
+    
+    let mouseX = -1000;
+    let mouseY = -1000;
+    
+    function draw() {
+      const time = Date.now() * 0.001;
+      
+      ctx.fillStyle = 'rgba(5, 8, 8, 0.15)';
+      ctx.fillRect(0, 0, width, height);
+      
+      for (const cell of cells) {
+        const dx = mouseX - cell.x;
+        const dy = mouseY - cell.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < 120) {
+          const influence = 1 - dist / 120;
+          cell.baseAlpha = Math.min(0.35, cell.baseAlpha + influence * 0.2);
+        }
+        
+        drawCell(cell, time);
+      }
+      
+      requestAnimationFrame(draw);
+    }
+    
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+    
+    resize();
+    draw();
+  </script>
 </body>
 </html>
