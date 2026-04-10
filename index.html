@@ -22,9 +22,7 @@
       --divider: rgba(20, 20, 20, 0.08);
     }
     
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
     
     body {
       font-family: 'DM Sans', sans-serif;
@@ -38,28 +36,21 @@
     
     #ink-canvas {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 0;
       pointer-events: none;
     }
     
-    .content {
-      position: relative;
-      z-index: 1;
-    }
+    .content { position: relative; z-index: 1; }
     
     header {
       padding: 80px 60px 60px;
     }
-    
     .header-inner {
       max-width: 1100px;
       margin: 0 auto;
     }
-    
     .logo {
       font-family: 'Cormorant Garamond', serif;
       font-size: 40px;
@@ -68,12 +59,7 @@
       color: var(--cream);
       text-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    
-    .logo span {
-      color: var(--ink-light);
-      text-shadow: none;
-    }
-    
+    .logo span { color: var(--ink-light); text-shadow: none; }
     .header-tagline {
       font-family: 'Cormorant Garamond', serif;
       font-size: 11px;
@@ -91,21 +77,14 @@
       max-width: 1100px;
       margin: 0 auto;
     }
-    
     .hero-title {
       font-family: 'Cormorant Garamond', serif;
       font-size: clamp(44px, 6.5vw, 82px);
       font-weight: 300;
       line-height: 1.12;
       letter-spacing: -0.01em;
-      color: var(--ink);
     }
-    
-    .hero-title em {
-      font-style: italic;
-      opacity: 0.65;
-    }
-    
+    .hero-title em { font-style: italic; opacity: 0.65; }
     .hero-sub {
       margin-top: 36px;
       font-size: 14px;
@@ -115,23 +94,14 @@
       line-height: 1.85;
     }
     
-    .divider {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 60px;
-    }
-    
-    .divider hr {
-      border: none;
-      border-top: 1px solid var(--divider);
-    }
+    .divider { max-width: 1100px; margin: 0 auto; padding: 0 60px; }
+    .divider hr { border: none; border-top: 1px solid var(--divider); }
     
     .projects-section {
       padding: 70px 60px 100px;
       max-width: 1100px;
       margin: 0 auto;
     }
-    
     .section-label {
       font-family: 'Cormorant Garamond', serif;
       font-size: 11px;
@@ -142,19 +112,9 @@
       opacity: 0.3;
       margin-bottom: 50px;
     }
-    
-    .projects-list {
-      list-style: none;
-    }
-    
-    .project-item {
-      border-top: 1px solid var(--divider);
-    }
-    
-    .project-item:last-child {
-      border-bottom: 1px solid var(--divider);
-    }
-    
+    .projects-list { list-style: none; }
+    .project-item { border-top: 1px solid var(--divider); }
+    .project-item:last-child { border-bottom: 1px solid var(--divider); }
     .project-link {
       display: flex;
       align-items: baseline;
@@ -165,20 +125,10 @@
       transition: padding-left 0.5s cubic-bezier(0.23, 1, 0.32, 1);
       gap: 40px;
     }
-    
-    .project-link:hover {
-      padding-left: 14px;
-    }
-    
-    .project-link:hover .project-name {
-      color: var(--cream);
-    }
-    
-    .project-link:hover .project-arrow {
-      opacity: 1;
-      transform: translateX(6px);
-    }
-    
+    .project-link:hover { padding-left: 14px; }
+    .project-link:hover .project-name { color: var(--cream); }
+    .project-link:hover .project-arrow { opacity: 1; transform: translateX(6px); }
+    .project-link:hover .project-desc { opacity: 0.7; }
     .project-name {
       font-family: 'Cormorant Garamond', serif;
       font-size: clamp(20px, 2.8vw, 30px);
@@ -186,7 +136,6 @@
       letter-spacing: 0.02em;
       transition: color 0.5s ease;
     }
-    
     .project-desc {
       font-size: 13px;
       font-weight: 300;
@@ -197,11 +146,6 @@
       text-align: right;
       transition: opacity 0.5s ease;
     }
-    
-    .project-link:hover .project-desc {
-      opacity: 0.7;
-    }
-    
     .project-arrow {
       font-size: 17px;
       opacity: 0;
@@ -214,13 +158,11 @@
       max-width: 1100px;
       margin: 0 auto;
     }
-    
     .footer-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    
     .footer-text {
       font-size: 12px;
       font-weight: 300;
@@ -228,16 +170,12 @@
       opacity: 0.28;
       letter-spacing: 0.08em;
     }
-    
     .footer-text a {
       color: inherit;
       text-decoration: none;
       transition: opacity 0.3s ease;
     }
-    
-    .footer-text a:hover {
-      opacity: 0.7;
-    }
+    .footer-text a:hover { opacity: 0.7; }
     
     @media (max-width: 768px) {
       header { padding: 55px 28px 40px; }
@@ -245,7 +183,6 @@
       .projects-section { padding: 45px 28px 70px; }
       .divider { padding: 0 28px; }
       footer { padding: 55px 28px; }
-      
       .project-link { flex-direction: column; gap: 6px; }
       .project-desc { text-align: left; max-width: 100%; }
       .project-arrow { display: none; }
@@ -346,151 +283,257 @@
     const canvas = document.getElementById('ink-canvas');
     const ctx = canvas.getContext('2d');
     
-    let width, height;
-    let blobs = [];
-    let ripples = [];
+    let W, H;
     let lastTime = 0;
-    let t = 0;
+    let T = 0;
     
-    function resize() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      initBlobs();
+    // ─── Simplex-like noise via layered sine fields ───
+    function hash(px, py) {
+      return Math.sin(px * 127.1 + py * 311.7) * 43758.5453 % 1;
+    }
+    function noise2(x, y) {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const ux = fx * fx * (3 - 2 * fx);
+      const uy = fy * fy * (3 - 2 * fy);
+      const a = hash(ix, iy);
+      const b = hash(ix + 1, iy);
+      const c = hash(ix, iy + 1);
+      const d = hash(ix + 1, iy + 1);
+      return a + (b - a) * ux + (c - a) * uy + (d - a - c + b) * ux * uy;
+    }
+    function fbm(x, y, octaves, lacunarity, gain) {
+      let v = 0, amp = 0.5, freq = 1;
+      for (let i = 0; i < octaves; i++) {
+        v += amp * noise2(x * freq, y * freq);
+        amp *= gain;
+        freq *= lacunarity;
+      }
+      return v;
+    }
+    function curlNoise(x, y, scale, time) {
+      const eps = 0.5;
+      const nx = fbm(x * scale + time * 0.07, y * scale, 4, 2.2, 0.5);
+      const ny = fbm(x * scale, y * scale + time * 0.06, 4, 2.2, 0.5);
+      const dnx_dx = (fbm((x + eps) * scale + time * 0.07, y * scale, 4, 2.2, 0.5) - nx) / eps;
+      const dny_dy = (fbm(x * scale, (y + eps) * scale + time * 0.06, 4, 2.2, 0.5) - ny) / eps;
+      // curl = (dNy/dx, -dNx/dy)
+      return { vx: dny_dy * 0.8, vy: -dnx_dx * 0.8 };
     }
     
-    function initBlobs() {
-      const count = Math.floor((width * height) / 35000);
-      blobs = [];
-      
+    // ─── Ink masses (large asymmetric flowing forms) ───
+    let masses = [];
+    function initMasses() {
+      masses = [];
+      const count = Math.floor((W * H) / 45000);
       for (let i = 0; i < count; i++) {
-        blobs.push(makeBlob(true));
+        masses.push(makeMass(true));
+      }
+    }
+    function makeMass(randomPos) {
+      const r = 90 + Math.random() * 200;
+      return {
+        x: randomPos ? Math.random() * W : (Math.random() < 0.5 ? -r * 2 : W + r * 2),
+        y: randomPos ? Math.random() * H : (Math.random() < 0.5 ? -r * 2 : H + r * 2),
+        radius: r,
+        baseRadius: r,
+        alpha: 0,
+        targetAlpha: 0.55 + Math.random() * 0.45,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.03 + Math.random() * 0.05,
+        flowScale: 0.0015 + Math.random() * 0.002,
+        aspect: 0.5 + Math.random() * 1.5,
+        angle: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.003,
+        stretch: 0,
+        stretchTarget: 0.2 + Math.random() * 0.8,
+      };
+    }
+    
+    // ─── Filaments (thin flowing tendrils) ───
+    let filaments = [];
+    function initFilaments() {
+      filaments = [];
+      const count = Math.floor((W * H) / 20000);
+      for (let i = 0; i < count; i++) {
+        filaments.push(makeFilament(true));
+      }
+    }
+    function makeFilament(randomPos) {
+      const len = 60 + Math.random() * 180;
+      return {
+        x: randomPos ? Math.random() * W : Math.random() * W,
+        y: randomPos ? Math.random() * H : Math.random() * H,
+        len: len,
+        width: 1.5 + Math.random() * 3.5,
+        alpha: 0,
+        targetAlpha: 0.25 + Math.random() * 0.45,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.05 + Math.random() * 0.08,
+        flowScale: 0.002 + Math.random() * 0.003,
+        angle: Math.random() * Math.PI * 2,
+        angleTarget: Math.random() * Math.PI * 2,
+        angleLerp: 0.003 + Math.random() * 0.007,
+        lengthLerp: 0.004 + Math.random() * 0.006,
+        segments: Math.floor(4 + Math.random() * 6),
+      };
+    }
+    
+    // ─── Micro specks (ambient dust) ───
+    let specks = [];
+    function initSpecks() {
+      specks = [];
+      const count = Math.floor((W * H) / 4000);
+      for (let i = 0; i < count; i++) {
+        specks.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          size: 0.5 + Math.random() * 2,
+          alpha: 0,
+          targetAlpha: 0.03 + Math.random() * 0.18,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.06 + Math.random() * 0.1,
+          flowScale: 0.003 + Math.random() * 0.004,
+        });
       }
     }
     
-    function makeBlob(randomPos) {
-      const r = 100 + Math.random() * 250;
-      return {
-        x: randomPos ? Math.random() * width : (Math.random() < 0.5 ? -r * 2 : width + r * 2),
-        y: Math.random() * height,
-        radius: r,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: (Math.random() - 0.5) * 0.2,
-        baseAlpha: 0.35 + Math.random() * 0.35,
-        alpha: 0,
-        targetAlpha: 0,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.04 + Math.random() * 0.06,
-        sizeVar: 0.8 + Math.random() * 0.4,
-        wobbleAmp: 15 + Math.random() * 25,
-      };
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      initMasses();
+      initFilaments();
+      initSpecks();
+    }
+    
+    function drawMass(m, t) {
+      const curl = curlNoise(m.x, m.y, m.flowScale, t);
+      m.x += curl.vx * 0.8;
+      m.y += curl.vy * 0.8;
+      m.angle += m.rotSpeed;
+      m.stretch += (m.stretchTarget - m.stretch) * 0.02;
+      
+      // wrap
+      const margin = m.radius * 2.5;
+      if (m.x < -margin) m.x = W + margin;
+      if (m.x > W + margin) m.x = -margin;
+      if (m.y < -margin) m.y = H + margin;
+      if (m.y > H + margin) m.y = -margin;
+      
+      m.alpha += (m.targetAlpha - m.alpha) * 0.008;
+      if (m.alpha < 0.005) return;
+      
+      const cx = m.x;
+      const cy = m.y;
+      const r = m.radius;
+      const a = m.angle;
+      const st = m.stretch;
+      
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(a);
+      ctx.scale(st, 1 / st);
+      
+      // ── dense ink core ──
+      const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.55);
+      coreGrad.addColorStop(0, `rgba(3, 3, 6, ${m.alpha})`);
+      coreGrad.addColorStop(0.3, `rgba(5, 5, 10, ${m.alpha * 0.9})`);
+      coreGrad.addColorStop(0.6, `rgba(10, 10, 16, ${m.alpha * 0.6})`);
+      coreGrad.addColorStop(1, `rgba(15, 15, 22, 0)`);
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+    }
+    
+    function drawFilament(f, t) {
+      const curl = curlNoise(f.x, f.y, f.flowScale, t);
+      f.x += curl.vx * 0.5;
+      f.y += curl.vy * 0.5;
+      
+      // curl angle toward target
+      f.angle += (f.angleTarget - f.angle) * f.angleLerp;
+      f.angleTarget += (Math.sin(t * f.speed + f.phase) * 0.5 - f.angleTarget) * 0.005;
+      
+      f.targetAlpha = 0.2 + Math.abs(Math.sin(t * f.speed * 0.3 + f.phase)) * 0.3;
+      f.alpha += (f.targetAlpha - f.alpha) * 0.04;
+      if (f.alpha < 0.01) return;
+      
+      const len = f.len;
+      const halfLen = len / 2;
+      
+      // build filament path (S-curve)
+      const pts = [];
+      for (let s = 0; s <= f.segments; s++) {
+        const frac = s / f.segments;
+        const tfrac = frac * 2 - 1;
+        const curl2 = curlNoise(
+          f.x + Math.cos(f.angle + frac * 1.5) * len * frac,
+          f.y + Math.sin(f.angle + frac * 1.5) * len * frac,
+          f.flowScale * 1.5, t
+        );
+        const px = f.x + Math.cos(f.angle) * tfrac * halfLen + curl2.vx * 20 * frac;
+        const py = f.y + Math.sin(f.angle) * tfrac * halfLen + curl2.vy * 20 * frac;
+        pts.push({ x: px, y: py });
+      }
+      
+      // width taper
+      for (let s = 0; s < pts.length - 1; s++) {
+        const frac = s / (pts.length - 1);
+        const w = f.width * (1 - Math.pow(frac * 2 - 1, 2)) * 0.5;
+        const alpha = f.alpha * (1 - Math.abs(frac * 2 - 1) * 0.7);
+        
+        ctx.strokeStyle = `rgba(8, 8, 14, ${alpha})`;
+        ctx.lineWidth = w;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(pts[s].x, pts[s].y);
+        ctx.lineTo(pts[s + 1].x, pts[s + 1].y);
+        ctx.stroke();
+      }
+    }
+    
+    function drawSpeck(s, t) {
+      const curl = curlNoise(s.x, s.y, s.flowScale, t);
+      s.x += curl.vx * 0.3 + Math.sin(t * s.speed + s.phase) * 0.15;
+      s.y += curl.vy * 0.3 + Math.cos(t * s.speed * 0.7 + s.phase) * 0.12;
+      
+      // wrap
+      if (s.x < 0) s.x = W;
+      if (s.x > W) s.x = 0;
+      if (s.y < 0) s.y = H;
+      if (s.y > H) s.y = 0;
+      
+      s.alpha += (s.targetAlpha - s.alpha) * 0.05;
+      if (s.alpha < 0.01) return;
+      
+      ctx.fillStyle = `rgba(12, 12, 18, ${s.alpha})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fill();
     }
     
     function draw() {
       const now = performance.now();
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
-      const t = now * 0.001;
+      T += dt;
       
-      // slow fade for ghostly trails
-      ctx.fillStyle = 'rgba(250, 250, 248, 0.025)';
-      ctx.fillRect(0, 0, width, height);
+      // very slow fade for long ghostly trails
+      ctx.fillStyle = 'rgba(250, 250, 248, 0.018)';
+      ctx.fillRect(0, 0, W, H);
       
-      for (const b of blobs) {
-        // drift + organic wobble
-        b.x += b.vx + Math.sin(t * b.speed * 0.5 + b.phase) * 0.1;
-        b.y += b.vy + Math.cos(t * b.speed * 0.35 + b.phase) * 0.08;
-        
-        // wrap edges smoothly
-        const margin = b.radius * 1.5;
-        if (b.x < -margin) b.x = width + margin;
-        else if (b.x > width + margin) b.x = -margin;
-        if (b.y < -margin) b.y = height + margin;
-        else if (b.y > height + margin) b.y = -margin;
-        
-        // lerp alpha
-        b.alpha += (b.baseAlpha - b.alpha) * 0.012;
-        
-        const cx = b.x;
-        const cy = b.y;
-        const r = b.radius * b.sizeVar + Math.sin(t * b.speed + b.phase) * b.wobbleAmp;
-        
-        // ── outer soft halo (heavy blur simulation via multiple layers) ──
-        const outerR = r * 2.2;
-        const grad1 = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, outerR);
-        grad1.addColorStop(0, `rgba(18, 18, 26, ${b.alpha * 0.4})`);
-        grad1.addColorStop(0.4, `rgba(18, 18, 26, ${b.alpha * 0.15})`);
-        grad1.addColorStop(1, `rgba(18, 18, 26, 0)`);
-        ctx.fillStyle = grad1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // ── mid blob ──
-        const grad2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-        grad2.addColorStop(0, `rgba(12, 12, 18, ${b.alpha * 0.85})`);
-        grad2.addColorStop(0.35, `rgba(18, 18, 26, ${b.alpha * 0.6})`);
-        grad2.addColorStop(0.65, `rgba(22, 22, 30, ${b.alpha * 0.3})`);
-        grad2.addColorStop(1, `rgba(25, 25, 35, 0)`);
-        ctx.fillStyle = grad2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // ── dark ink pool core ──
-        const coreR = r * 0.28;
-        const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
-        coreGrad.addColorStop(0, `rgba(5, 5, 10, ${b.alpha * 0.7})`);
-        coreGrad.addColorStop(1, `rgba(5, 5, 10, 0)`);
-        ctx.fillStyle = coreGrad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      // ── ripple blobs ──
-      for (let i = ripples.length - 1; i >= 0; i--) {
-        const rp = ripples[i];
-        const age = t - rp.startTime;
-        const duration = 4.5;
-        const progress = age / duration;
-        
-        if (progress >= 1) {
-          ripples.splice(i, 1);
-          continue;
-        }
-        
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        const fadeAlpha = (1 - progress) * 0.6;
-        const r = rp.radius * easeOut;
-        const cx = rp.x;
-        const cy = rp.y;
-        
-        const grad = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
-        grad.addColorStop(0, `rgba(12, 12, 18, ${fadeAlpha})`);
-        grad.addColorStop(0.5, `rgba(18, 18, 26, ${fadeAlpha * 0.4})`);
-        grad.addColorStop(1, `rgba(25, 25, 35, 0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // draw in order: specks → filaments → masses (painter's algo)
+      for (const s of specks) drawSpeck(s, T);
+      for (const f of filaments) drawFilament(f, T);
+      for (const m of masses) drawMass(m, T);
       
       requestAnimationFrame(draw);
     }
     
-    function spawnRipple(x, y) {
-      ripples.push({
-        x, y,
-        radius: 150 + Math.random() * 200,
-        startTime: t,
-      });
-    }
-    
     window.addEventListener('resize', resize);
-    window.addEventListener('click', (e) => {
-      spawnRipple(e.clientX, e.clientY);
-    });
-    
     resize();
     requestAnimationFrame(draw);
   </script>
