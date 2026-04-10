@@ -8,11 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     
     :root {
       --cream: #F5E6D3;
@@ -44,13 +40,8 @@
     
     .content { position: relative; z-index: 1; }
     
-    header {
-      padding: 80px 60px 60px;
-    }
-    .header-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    header { padding: 80px 60px 60px; }
+    .header-inner { max-width: 1100px; margin: 0 auto; }
     .logo {
       font-family: 'Cormorant Garamond', serif;
       font-size: 40px;
@@ -72,11 +63,7 @@
       margin-top: 18px;
     }
     
-    .hero {
-      padding: 100px 60px 80px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    .hero { padding: 100px 60px 80px; max-width: 1100px; margin: 0 auto; }
     .hero-title {
       font-family: 'Cormorant Garamond', serif;
       font-size: clamp(44px, 6.5vw, 82px);
@@ -97,11 +84,7 @@
     .divider { max-width: 1100px; margin: 0 auto; padding: 0 60px; }
     .divider hr { border: none; border-top: 1px solid var(--divider); }
     
-    .projects-section {
-      padding: 70px 60px 100px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    .projects-section { padding: 70px 60px 100px; max-width: 1100px; margin: 0 auto; }
     .section-label {
       font-family: 'Cormorant Garamond', serif;
       font-size: 11px;
@@ -153,16 +136,8 @@
       flex-shrink: 0;
     }
     
-    footer {
-      padding: 70px 60px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .footer-inner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    footer { padding: 70px 60px; max-width: 1100px; margin: 0 auto; }
+    .footer-inner { display: flex; justify-content: space-between; align-items: center; }
     .footer-text {
       font-size: 12px;
       font-weight: 300;
@@ -170,11 +145,7 @@
       opacity: 0.28;
       letter-spacing: 0.08em;
     }
-    .footer-text a {
-      color: inherit;
-      text-decoration: none;
-      transition: opacity 0.3s ease;
-    }
+    .footer-text a { color: inherit; text-decoration: none; transition: opacity 0.3s ease; }
     .footer-text a:hover { opacity: 0.7; }
     
     @media (max-width: 768px) {
@@ -284,251 +255,239 @@
     const ctx = canvas.getContext('2d');
     
     let W, H;
+    let t = 0;
     let lastTime = 0;
-    let T = 0;
     
-    // ─── Simplex-like noise via layered sine fields ───
-    function hash(px, py) {
-      return Math.sin(px * 127.1 + py * 311.7) * 43758.5453 % 1;
-    }
-    function noise2(x, y) {
-      const ix = Math.floor(x), iy = Math.floor(y);
-      const fx = x - ix, fy = y - iy;
-      const ux = fx * fx * (3 - 2 * fx);
-      const uy = fy * fy * (3 - 2 * fy);
-      const a = hash(ix, iy);
-      const b = hash(ix + 1, iy);
-      const c = hash(ix, iy + 1);
-      const d = hash(ix + 1, iy + 1);
-      return a + (b - a) * ux + (c - a) * uy + (d - a - c + b) * ux * uy;
-    }
-    function fbm(x, y, octaves, lacunarity, gain) {
-      let v = 0, amp = 0.5, freq = 1;
-      for (let i = 0; i < octaves; i++) {
-        v += amp * noise2(x * freq, y * freq);
-        amp *= gain;
-        freq *= lacunarity;
-      }
-      return v;
-    }
-    function curlNoise(x, y, scale, time) {
-      const eps = 0.5;
-      const nx = fbm(x * scale + time * 0.07, y * scale, 4, 2.2, 0.5);
-      const ny = fbm(x * scale, y * scale + time * 0.06, 4, 2.2, 0.5);
-      const dnx_dx = (fbm((x + eps) * scale + time * 0.07, y * scale, 4, 2.2, 0.5) - nx) / eps;
-      const dny_dy = (fbm(x * scale, (y + eps) * scale + time * 0.06, 4, 2.2, 0.5) - ny) / eps;
-      // curl = (dNy/dx, -dNx/dy)
-      return { vx: dny_dy * 0.8, vy: -dnx_dx * 0.8 };
-    }
-    
-    // ─── Ink masses (large asymmetric flowing forms) ───
-    let masses = [];
-    function initMasses() {
-      masses = [];
-      const count = Math.floor((W * H) / 45000);
-      for (let i = 0; i < count; i++) {
-        masses.push(makeMass(true));
-      }
-    }
-    function makeMass(randomPos) {
-      const r = 90 + Math.random() * 200;
-      return {
-        x: randomPos ? Math.random() * W : (Math.random() < 0.5 ? -r * 2 : W + r * 2),
-        y: randomPos ? Math.random() * H : (Math.random() < 0.5 ? -r * 2 : H + r * 2),
-        radius: r,
-        baseRadius: r,
-        alpha: 0,
-        targetAlpha: 0.55 + Math.random() * 0.45,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.03 + Math.random() * 0.05,
-        flowScale: 0.0015 + Math.random() * 0.002,
-        aspect: 0.5 + Math.random() * 1.5,
-        angle: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.003,
-        stretch: 0,
-        stretchTarget: 0.2 + Math.random() * 0.8,
-      };
-    }
-    
-    // ─── Filaments (thin flowing tendrils) ───
-    let filaments = [];
-    function initFilaments() {
-      filaments = [];
-      const count = Math.floor((W * H) / 20000);
-      for (let i = 0; i < count; i++) {
-        filaments.push(makeFilament(true));
-      }
-    }
-    function makeFilament(randomPos) {
-      const len = 60 + Math.random() * 180;
-      return {
-        x: randomPos ? Math.random() * W : Math.random() * W,
-        y: randomPos ? Math.random() * H : Math.random() * H,
-        len: len,
-        width: 1.5 + Math.random() * 3.5,
-        alpha: 0,
-        targetAlpha: 0.25 + Math.random() * 0.45,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.05 + Math.random() * 0.08,
-        flowScale: 0.002 + Math.random() * 0.003,
-        angle: Math.random() * Math.PI * 2,
-        angleTarget: Math.random() * Math.PI * 2,
-        angleLerp: 0.003 + Math.random() * 0.007,
-        lengthLerp: 0.004 + Math.random() * 0.006,
-        segments: Math.floor(4 + Math.random() * 6),
-      };
-    }
-    
-    // ─── Micro specks (ambient dust) ───
-    let specks = [];
-    function initSpecks() {
-      specks = [];
-      const count = Math.floor((W * H) / 4000);
-      for (let i = 0; i < count; i++) {
-        specks.push({
-          x: Math.random() * W,
-          y: Math.random() * H,
-          size: 0.5 + Math.random() * 2,
-          alpha: 0,
-          targetAlpha: 0.03 + Math.random() * 0.18,
-          phase: Math.random() * Math.PI * 2,
-          speed: 0.06 + Math.random() * 0.1,
-          flowScale: 0.003 + Math.random() * 0.004,
-        });
-      }
-    }
+    // ─── Low-res density canvas for performance ───
+    let densityCanvas, densityCtx;
+    let DENSITY_SCALE = 4;
     
     function resize() {
       W = canvas.width = window.innerWidth;
       H = canvas.height = window.innerHeight;
-      initMasses();
-      initFilaments();
-      initSpecks();
+      
+      densityCanvas = document.createElement('canvas');
+      densityCanvas.width = Math.ceil(W / DENSITY_SCALE);
+      densityCanvas.height = Math.ceil(H / DENSITY_SCALE);
+      densityCtx = densityCanvas.getContext('2d');
+      
+      // pre-fill with very low black to seed density
+      densityCtx.fillStyle = 'rgba(0,0,0,0.008)';
+      densityCtx.fillRect(0, 0, densityCanvas.width, densityCanvas.height);
     }
     
-    function drawMass(m, t) {
-      const curl = curlNoise(m.x, m.y, m.flowScale, t);
-      m.x += curl.vx * 0.8;
-      m.y += curl.vy * 0.8;
-      m.angle += m.rotSpeed;
-      m.stretch += (m.stretchTarget - m.stretch) * 0.02;
-      
-      // wrap
-      const margin = m.radius * 2.5;
-      if (m.x < -margin) m.x = W + margin;
-      if (m.x > W + margin) m.x = -margin;
-      if (m.y < -margin) m.y = H + margin;
-      if (m.y > H + margin) m.y = -margin;
-      
-      m.alpha += (m.targetAlpha - m.alpha) * 0.008;
-      if (m.alpha < 0.005) return;
-      
-      const cx = m.x;
-      const cy = m.y;
-      const r = m.radius;
-      const a = m.angle;
-      const st = m.stretch;
-      
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(a);
-      ctx.scale(st, 1 / st);
-      
-      // ── dense ink core ──
-      const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.55);
-      coreGrad.addColorStop(0, `rgba(3, 3, 6, ${m.alpha})`);
-      coreGrad.addColorStop(0.3, `rgba(5, 5, 10, ${m.alpha * 0.9})`);
-      coreGrad.addColorStop(0.6, `rgba(10, 10, 16, ${m.alpha * 0.6})`);
-      coreGrad.addColorStop(1, `rgba(15, 15, 22, 0)`);
-      ctx.fillStyle = coreGrad;
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.restore();
+    // ─── Hash + smooth noise ───
+    function hash(px, py) {
+      const h = Math.sin(px * 127.1 + py * 311.7) * 43758.5453;
+      return h - Math.floor(h);
     }
-    
-    function drawFilament(f, t) {
-      const curl = curlNoise(f.x, f.y, f.flowScale, t);
-      f.x += curl.vx * 0.5;
-      f.y += curl.vy * 0.5;
-      
-      // curl angle toward target
-      f.angle += (f.angleTarget - f.angle) * f.angleLerp;
-      f.angleTarget += (Math.sin(t * f.speed + f.phase) * 0.5 - f.angleTarget) * 0.005;
-      
-      f.targetAlpha = 0.2 + Math.abs(Math.sin(t * f.speed * 0.3 + f.phase)) * 0.3;
-      f.alpha += (f.targetAlpha - f.alpha) * 0.04;
-      if (f.alpha < 0.01) return;
-      
-      const len = f.len;
-      const halfLen = len / 2;
-      
-      // build filament path (S-curve)
-      const pts = [];
-      for (let s = 0; s <= f.segments; s++) {
-        const frac = s / f.segments;
-        const tfrac = frac * 2 - 1;
-        const curl2 = curlNoise(
-          f.x + Math.cos(f.angle + frac * 1.5) * len * frac,
-          f.y + Math.sin(f.angle + frac * 1.5) * len * frac,
-          f.flowScale * 1.5, t
-        );
-        const px = f.x + Math.cos(f.angle) * tfrac * halfLen + curl2.vx * 20 * frac;
-        const py = f.y + Math.sin(f.angle) * tfrac * halfLen + curl2.vy * 20 * frac;
-        pts.push({ x: px, y: py });
+    function noise(x, y) {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const ux = fx * fx * (3 - 2 * fx);
+      const uy = fy * fy * (3 - 2 * fy);
+      return (
+        hash(ix, iy) * (1 - ux) * (1 - uy) +
+        hash(ix + 1, iy) * ux * (1 - uy) +
+        hash(ix, iy + 1) * (1 - ux) * uy +
+        hash(ix + 1, iy + 1) * ux * uy
+      );
+    }
+    // fractional brownian motion
+    function fbm(x, y, octaves) {
+      let v = 0, a = 0.5, f = 1;
+      for (let i = 0; i < octaves; i++) {
+        v += a * noise(x * f, y * f);
+        a *= 0.5; f *= 2.0;
       }
+      return v;
+    }
+    // domain-warped fbm for organic marbling
+    function warpedFbm(x, y, time) {
+      const wx = fbm(x + time * 0.04, y + time * 0.03, 4);
+      const wy = fbm(x + time * 0.035 + 5.3, y + time * 0.045 + 3.7, 4);
+      // second warp layer for curl
+      const wx2 = fbm(x + wx * 2.5 + time * 0.02, y + wy * 2.5 + time * 0.025, 3);
+      const wy2 = fbm(x + wx * 2.0 + time * 0.018 + 7.1, y + wy * 2.0 + time * 0.022 + 2.3, 3);
+      return fbm(x + wx2 * 1.8, y + wy2 * 1.8, 5);
+    }
+    
+    // ─── Inject density at flowing sources ───
+    function injectDensity() {
+      const dw = densityCanvas.width;
+      const dh = densityCanvas.height;
       
-      // width taper
-      for (let s = 0; s < pts.length - 1; s++) {
-        const frac = s / (pts.length - 1);
-        const w = f.width * (1 - Math.pow(frac * 2 - 1, 2)) * 0.5;
-        const alpha = f.alpha * (1 - Math.abs(frac * 2 - 1) * 0.7);
+      const numSources = 3;
+      for (let s = 0; s < numSources; s++) {
+        const phase = t * 0.06 + s * 2.1;
+        const sx = (Math.sin(phase * 0.7 + s) * 0.5 + 0.5) * dw;
+        const sy = (Math.cos(phase * 0.5 + s * 1.3) * 0.5 + 0.5) * dh;
         
-        ctx.strokeStyle = `rgba(8, 8, 14, ${alpha})`;
-        ctx.lineWidth = w;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(pts[s].x, pts[s].y);
-        ctx.lineTo(pts[s + 1].x, pts[s + 1].y);
-        ctx.stroke();
+        // flowing direction from curl of warped field
+        const worldX = (sx / dw) * 3.0;
+        const worldY = (sy / dh) * 3.0;
+        const wVal = warpedFbm(worldX, worldY, t);
+        const angle = wVal * Math.PI * 4;
+        
+        const spread = 8 + Math.floor(12 * (0.5 + 0.5 * Math.sin(t * 0.08 + s)));
+        
+        for (let dy = -spread; dy <= spread; dy++) {
+          for (let dx = -spread; dx <= spread; dx++) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > spread) continue;
+            
+            const nx = Math.round(sx + dx);
+            const ny = Math.round(sy + dy);
+            if (nx < 0 || nx >= dw || ny < 0 || ny >= dh) continue;
+            
+            // inject along flow direction, elongated
+            const along = dx * Math.cos(angle) + dy * Math.sin(angle);
+            const cross = Math.abs(dx * Math.sin(angle) - dy * Math.cos(angle));
+            if (along < -spread * 0.8) continue;
+            if (cross > spread * 0.4) continue;
+            
+            const falloff = Math.pow(Math.max(0, 1 - dist / spread), 2);
+            const amount = falloff * (0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * 0.12 + s * 1.7)));
+            
+            const px = densityCtx.getImageData(nx, ny, 1, 1).data;
+            const newAlpha = Math.min(0.9, px[3] / 255 + amount * 0.08);
+            densityCtx.putImageData(
+              densityCtx.createImageData(1, 1),
+              nx, ny
+            );
+            densityCtx.fillStyle = `rgba(0,0,0,${newAlpha})`;
+            densityCtx.fillRect(nx, ny, 1, 1);
+          }
+        }
       }
     }
     
-    function drawSpeck(s, t) {
-      const curl = curlNoise(s.x, s.y, s.flowScale, t);
-      s.x += curl.vx * 0.3 + Math.sin(t * s.speed + s.phase) * 0.15;
-      s.y += curl.vy * 0.3 + Math.cos(t * s.speed * 0.7 + s.phase) * 0.12;
+    // ─── Advect existing density via curl field ───
+    function advectDensity() {
+      const dw = densityCanvas.width;
+      const dh = densityCanvas.height;
+      const src = densityCtx.getImageData(0, 0, dw, dh).data;
+      const dst = densityCtx.createImageData(dw, dh);
+      const dd = dst.data;
       
-      // wrap
-      if (s.x < 0) s.x = W;
-      if (s.x > W) s.x = 0;
-      if (s.y < 0) s.y = H;
-      if (s.y > H) s.y = 0;
+      for (let py = 0; py < dh; py++) {
+        for (let px = 0; px < dw; px++) {
+          const idx = (py * dw + px) * 4;
+          
+          // curl at this pixel
+          const scale = 0.004;
+          const eps = 1.0;
+          const n0 = warpedFbm((px + eps) * scale, py * scale, t);
+          const n1 = warpedFbm((px - eps) * scale, py * scale, t);
+          const n2 = warpedFbm(px * scale, (py + eps) * scale, t);
+          const n3 = warpedFbm(px * scale, (py - eps) * scale, t);
+          const curlX = (n0 - n1) / (2 * eps);
+          const curlY = (n2 - n3) / (2 * eps);
+          
+          const advX = px - curlX * 0.8;
+          const advY = py - curlY * 0.8;
+          
+          const srcX = Math.max(0, Math.min(dw - 1, Math.round(advX)));
+          const srcY = Math.max(0, Math.min(dh - 1, Math.round(advY)));
+          const sidx = (srcY * dw + srcX) * 4;
+          
+          const srcA = src[sidx + 3] / 255;
+          const newA = srcA * 0.992; // slow dissipation
+          
+          dd[idx] = 0;
+          dd[idx + 1] = 0;
+          dd[idx + 2] = 0;
+          dd[idx + 3] = Math.round(newA * 255);
+        }
+      }
       
-      s.alpha += (s.targetAlpha - s.alpha) * 0.05;
-      if (s.alpha < 0.01) return;
+      densityCtx.putImageData(dst, 0, 0);
+    }
+    
+    // ─── Mouse ripple ───
+    let mouseRipples = [];
+    canvas.addEventListener('click', (e) => {
+      const dw = densityCanvas.width;
+      const dh = densityCanvas.height;
+      mouseRipples.push({
+        x: (e.clientX / W) * dw,
+        y: (e.clientY / H) * dh,
+        r: 0,
+        maxR: (W / DENSITY_SCALE) * 0.6,
+        t: t,
+      });
+    });
+    
+    function applyMouseRipples() {
+      for (let i = mouseRipples.length - 1; i >= 0; i--) {
+        const rp = mouseRipples[i];
+        const age = t - rp.t;
+        if (age > 3.5) { mouseRipples.splice(i, 1); continue; }
+        
+        const progress = age / 3.5;
+        rp.r = rp.maxR * (1 - Math.pow(1 - progress, 2));
+        const rippleA = (1 - progress) * 0.5;
+        const thickness = 6 + progress * 8;
+        
+        // draw ring into density
+        const dr = densityCtx.getImageData(0, 0, densityCanvas.width, densityCanvas.height).data;
+        const di = densityCtx.createImageData(densityCanvas.width, densityCanvas.height);
+        di.data.set(dr);
+        const dd = di.data;
+        
+        const dw = densityCanvas.width;
+        const dh = densityCanvas.height;
+        
+        for (let py = 0; py < dh; py++) {
+          for (let px = 0; px < dw; px++) {
+            const dist = Math.sqrt((px - rp.x) ** 2 + (py - rp.y) ** 2);
+            const ringDist = Math.abs(dist - rp.r);
+            if (ringDist < thickness) {
+              const ringA = (1 - ringDist / thickness) * rippleA;
+              const idx = (py * dw + px) * 4;
+              const existingA = dd[idx + 3] / 255;
+              dd[idx + 3] = Math.min(255, Math.round((existingA + ringA * 0.3) * 255));
+            }
+          }
+        }
+        densityCtx.putImageData(di, 0, 0);
+      }
+    }
+    
+    function renderDensity() {
+      const dw = densityCanvas.width;
+      const dh = densityCanvas.height;
       
-      ctx.fillStyle = `rgba(12, 12, 18, ${s.alpha})`;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-      ctx.fill();
+      // clear main canvas with warm white
+      ctx.fillStyle = '#FAFAF8';
+      ctx.fillRect(0, 0, W, H);
+      
+      // draw low-res density upscaled with smoothing
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(densityCanvas, 0, 0, W, H);
+      ctx.restore();
+      
+      // composite the density with multiply/blend mode for natural ink feel
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = '#1a1a22';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
     }
     
     function draw() {
       const now = performance.now();
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
-      T += dt;
+      t += dt;
       
-      // very slow fade for long ghostly trails
-      ctx.fillStyle = 'rgba(250, 250, 248, 0.018)';
-      ctx.fillRect(0, 0, W, H);
-      
-      // draw in order: specks → filaments → masses (painter's algo)
-      for (const s of specks) drawSpeck(s, T);
-      for (const f of filaments) drawFilament(f, T);
-      for (const m of masses) drawMass(m, T);
+      injectDensity();
+      advectDensity();
+      applyMouseRipples();
+      renderDensity();
       
       requestAnimationFrame(draw);
     }
