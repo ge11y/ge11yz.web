@@ -234,24 +234,24 @@
 
   <script>
   // ════════════════════════════════════════════════
-  // Minimal WebGL Ink Fluid — Black Ink in Water
+  // TWO-MATERIAL MARBLING — Black Ink + White/Cream Pigment
+  // Navier-Stokes with separate density fields
   // ════════════════════════════════════════════════
 
   const canvas = document.getElementById('ink-canvas');
   const gl = canvas.getContext('webgl', { alpha: false, antialias: false });
   if (!gl) {
     document.body.style.background = '#FAFAF8';
-    alert('WebGL not supported');
     throw new Error('No WebGL');
   }
 
-  // ─── Shader compilation ───
+  // ─── Shader helpers ───
   function compileShader(type, src) {
     const s = gl.createShader(type);
     gl.shaderSource(s, src);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      console.error('Shader error:', gl.getShaderInfoLog(s));
+      console.error('Shader error:', gl.getShaderInfoLog(s), '\n---\n', src);
       return null;
     }
     return s;
@@ -272,7 +272,7 @@
     return p;
   }
 
-  // ─── Fullscreen quad setup ───
+  // ─── Vertex shader ───
   const VS = `
     attribute vec2 aPos;
     varying vec2 vUv;
@@ -281,18 +281,19 @@
       gl_Position = vec4(aPos, 0.0, 1.0);
     }
   `;
+
   const quadBuf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
 
-  function useProgram(prog) {
-    gl.useProgram(prog);
-    const loc = gl.getAttribLocation(prog, 'aPos');
+  function useProgram(p) {
+    gl.useProgram(p);
+    const loc = gl.getAttribLocation(p, 'aPos');
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   }
 
-  // ─── FBO creation ───
+  // ─── FBO helpers ───
   function makeFBO(w, h) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -317,7 +318,10 @@
     };
   }
 
-  // ─── Shader sources ───
+  // ════════════════════════════════════════════════
+  // SIMULATION SHADERS
+  // ════════════════════════════════════════════════
+
   const ADVECT = `
     precision mediump float;
     uniform sampler2D uVel;
@@ -418,6 +422,7 @@
     }
   `;
 
+  // Splat: RGB = vel.xy, dens.z
   const SPLAT = `
     precision mediump float;
     uniform sampler2D uTgt;
@@ -436,28 +441,60 @@
     }
   `;
 
-  const INJECT = `
+  // Black ink injection (densB = x channel)
+  const INJECT_B = `
     precision mediump float;
-    uniform sampler2D uDen;
+    uniform sampler2D uDenB;
     uniform float uT;
     varying vec2 vUv;
     void main() {
-      float e = texture2D(uDen, vUv).z;
+      float e = texture2D(uDenB, vUv).x;
       float ink = 0.0;
-      for (int i = 0; i < 4; i++) {
+      // 3 drifting black ink sources
+      for (int i = 0; i < 3; i++) {
         float fi = float(i);
-        float ph = uT * (0.025 + fi * 0.009);
+        float ph = uT * (0.022 + fi * 0.011);
         vec2 p;
-        p.x = 0.3 + 0.4 * sin(ph * 0.9 + fi * 2.1);
-        p.y = 0.35 + 0.3 * cos(ph * 0.6 + fi * 1.618);
+        p.x = 0.25 + 0.5 * sin(ph * 0.75 + fi * 2.618);
+        p.y = 0.30 + 0.4 * cos(ph * 0.55 + fi * 1.9);
         vec2 d = vUv - p;
-        float al = dot(d, vec2(cos(ph * 0.5 + fi), sin(ph * 0.5 + fi)));
-        float cr = abs(dot(d, vec2(-sin(ph * 0.5 + fi), cos(ph * 0.5 + fi))));
-        float el = max(0.0, 0.04 - al) / 0.04;
-        float na = max(0.0, 1.0 - cr / 0.012);
-        ink = max(ink, el * na * (0.4 + 0.6 * sin(uT * 0.08 + fi * 3.0)) * 0.06);
+        float al = dot(d, vec2(cos(ph * 0.45 + fi), sin(ph * 0.45 + fi)));
+        float cr = abs(dot(d, vec2(-sin(ph * 0.45 + fi), cos(ph * 0.45 + fi))));
+        float el = max(0.0, 0.045 - al) / 0.045;
+        float na = max(0.0, 1.0 - cr / 0.016);
+        float amount = el * na * (0.35 + 0.65 * sin(uT * 0.06 + fi * 3.7)) * 0.07;
+        ink = max(ink, amount);
       }
-      gl_FragColor = vec4(0.0, 0.0, min(1.0, e + ink), 1.0);
+      gl_FragColor = vec4(min(1.0, e + ink), 0.0, 0.0, 1.0);
+    }
+  `;
+
+  // White/cream pigment injection (densW = y channel)
+  const INJECT_W = `
+    precision mediump float;
+    uniform sampler2D uDenW;
+    uniform float uT;
+    varying vec2 vUv;
+    void main() {
+      float e = texture2D(uDenW, vUv).y;
+      float ink = 0.0;
+      // 3 drifting white/cream pigment sources (offset phase from black)
+      for (int i = 0; i < 3; i++) {
+        float fi = float(i);
+        float ph = uT * (0.018 + fi * 0.013) + 1.4;
+        vec2 p;
+        p.x = 0.35 + 0.35 * sin(ph * 0.65 + fi * 1.9 + 1.0);
+        p.y = 0.40 + 0.35 * cos(ph * 0.48 + fi * 2.414);
+        vec2 d = vUv - p;
+        float al = dot(d, vec2(cos(ph * 0.38 + fi + 0.5), sin(ph * 0.38 + fi + 0.5)));
+        float cr = abs(dot(d, vec2(-sin(ph * 0.38 + fi + 0.5), cos(ph * 0.38 + fi + 0.5))));
+        float el = max(0.0, 0.055 - al) / 0.055;
+        float na = max(0.0, 1.0 - cr / 0.022);
+        // slightly larger, softer ellipses for milky pigment
+        float amount = el * na * (0.4 + 0.6 * sin(uT * 0.055 + fi * 2.3 + 1.2)) * 0.055;
+        ink = max(ink, amount);
+      }
+      gl_FragColor = vec4(0.0, min(1.0, e + ink), 0.0, 1.0);
     }
   `;
 
@@ -472,7 +509,7 @@
                 texture2D(uVel, vUv + vec2(uTS.x,0)).xy +
                 texture2D(uVel, vUv - vec2(0,uTS.y)).xy +
                 texture2D(uVel, vUv + vec2(0,uTS.y)).xy) * 0.25;
-      gl_FragColor = vec4(mix(c, n, 0.012), 0.0, 1.0);
+      gl_FragColor = vec4(mix(c, n, 0.015), 0.0, 1.0);
     }
   `;
 
@@ -486,56 +523,124 @@
     float fbm(vec2 p,int o){float v=0.,a=.5,f=1.;for(int i=0;i<6;i++){if(i>=o)break;v+=a*n(p*f);a*=.5;f*=2.1;}return v;}
     void main() {
       vec2 uv = vUv;
-      vec2 w = vec2(fbm(uv*3.+uT*.035,5), fbm(uv*3.+uT*.028+5.3,5));
-      vec2 w2 = vec2(fbm(uv*2.5+w*2.+uT*.02,4), fbm(uv*2.5+w*2.+uT*.018+3.7,4));
+      vec2 w = vec2(fbm(uv*3.+uT*.03,5), fbm(uv*3.+uT*.026+5.3,5));
+      vec2 w2 = vec2(fbm(uv*2.5+w*2.+uT*.018,4), fbm(uv*2.5+w*2.+uT*.016+3.7,4));
       float nx = fbm(uv*2.+w2+uT*.012,4);
       float ny = fbm(uv*2.+w2+uT*.01+7.1,4);
       float e = 0.004;
       float dndx = (fbm(uv*2.+w2+vec2(e,0)+uT*.012,4)-nx)/e;
       float dndy = (fbm(uv*2.+w2+vec2(0,e)+uT*.012,4)-ny)/e;
-      vec2 curl = vec2(dndy,-dndx)*0.3;
+      vec2 curl = vec2(dndy,-dndx)*0.35;
       vec2 vel = texture2D(uVel, uv).xy;
-      vel = (vel + curl) * 0.9985;
+      vel = (vel + curl) * 0.998;
       gl_FragColor = vec4(vel, 0.0, 1.0);
     }
   `;
 
+  // ════════════════════════════════════════════════
+  // DISPLAY SHADER — two-material composite
+  // ════════════════════════════════════════════════
   const DISPLAY = `
     precision mediump float;
-    uniform sampler2D uDen;
+    uniform sampler2D uDenB;
+    uniform sampler2D uDenW;
     uniform float uT;
     uniform vec2 uTS;
     varying vec2 vUv;
     float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
     float n(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
     float fbm(vec2 p,int o){float v=0.,a=.5,f=1.;for(int i=0;i<6;i++){if(i>=o)break;v+=a*n(p*f);a*=.5;f*=2.1;}return v;}
+
     void main() {
       vec2 uv = vUv;
-      // domain warp
-      vec2 w = vec2(fbm(uv*4.+uT*.02,5), fbm(uv*4.+uT*.016+3.3,5));
-      vec2 w2 = vec2(fbm(uv*3.+w*2.5+uT*.015,5), fbm(uv*3.+w*2.5+uT*.012+6.1,5));
-      // sample density — warp offset scaled by texelSize so it stays within bounds
-      float d = texture2D(uDen, clamp(uv + w2 * uTS * 2.0, 0.0, 1.0)).z;
-      float marb = fbm(uv*5.+w2*2.5+uT*.025,4);
-      float det = fbm(uv*10.+uT*.04,3);
-      d = mix(d, d*(0.55+0.75*marb), 0.5);
-      d += det * 0.03 * max(d,0.);
+
+      // domain warp for each material independently
+      vec2 wB = vec2(fbm(uv*4. + uT*.018, 5), fbm(uv*4. + uT*.014 + 3.1, 5));
+      vec2 wB2 = vec2(fbm(uv*3. + wB*2. + uT*.012, 5), fbm(uv*3. + wB*2. + uT*.01 + 6.2, 5));
+      vec2 wW = vec2(fbm(uv*3.5 + uT*.016 + 1.7, 5), fbm(uv*3.5 + uT*.013 + 4.4, 5));
+      vec2 wW2 = vec2(fbm(uv*2.8 + wW*2.2 + uT*.011, 5), fbm(uv*2.8 + wW*2.2 + uT*.009 + 5.8, 5));
+
+      // sample both density fields with their own warps
+      float dB = texture2D(uDenB, clamp(uv + wB2 * uTS * 2.5, 0.0, 1.0)).x;
+      float dW = texture2D(uDenW, clamp(uv + wW2 * uTS * 2.5, 0.0, 1.0)).y;
+
+      // internal marbling breakup per material
+      float marbB = fbm(uv*5. + wB2*2. + uT*.022, 4);
+      float marbW = fbm(uv*4.5 + wW2*2. + uT*.019 + 2.3, 4);
+      float detB  = fbm(uv*10. + uT*.038, 3);
+      float detW  = fbm(uv*9.  + uT*.032 + 1.1, 3);
+
+      dB = mix(dB, dB*(0.5+0.8*marbB), 0.5);
+      dB += detB * 0.035 * max(dB, 0.);
+      dW = mix(dW, dW*(0.55+0.75*marbW), 0.45);
+      dW += detW * 0.03 * max(dW, 0.);
+
+      // ── Warm cream background ──
       vec3 bg = vec3(0.980, 0.980, 0.972);
-      vec3 inkDk = vec3(0.008, 0.008, 0.012);
-      vec3 inkMd = vec3(0.075, 0.075, 0.085);
-      vec3 inkLt = vec3(0.18, 0.18, 0.20);
-      vec3 col;
-      if (d < 0.15) col = mix(inkLt, inkMd, d/0.15);
-      else if (d < 0.5) col = mix(inkMd, inkDk, smoothstep(0.,1.,(d-0.15)/0.35));
-      else col = mix(inkDk, vec3(0.), min(1.,(d-0.5)/0.5) * min(1.,(d-0.5)/0.5));
-      float alpha = smoothstep(0.,0.1,d) * pow(max(d,0.),0.62);
-      col = mix(bg, col, min(alpha,1.));
-      vec2 v = uv*2.-1.; col *= mix(0.94,1.,1.-dot(v*0.3,v*0.3));
+
+      // ── Black ink colors ──
+      vec3 inkDk  = vec3(0.006, 0.006, 0.010);
+      vec3 inkMid = vec3(0.060, 0.060, 0.070);
+      vec3 inkLt  = vec3(0.150, 0.150, 0.165);
+
+      // ── White/cream pigment colors ──
+      vec3 whiteOpaque = vec3(0.970, 0.965, 0.955);  // bright cream
+      vec3 whiteMid    = vec3(0.930, 0.920, 0.900);  // mid cream
+      vec3 whiteShadow = vec3(0.820, 0.810, 0.790);  // soft shadow cream
+
+      // ── Black ink rendering ──
+      float inkAlpha = smoothstep(0., 0.08, dB) * pow(max(dB, 0.), 0.55);
+      vec3 inkCol;
+      if (dB < 0.15) {
+        inkCol = mix(inkLt, inkMid, dB / 0.15);
+      } else if (dB < 0.45) {
+        float f = (dB - 0.15) / 0.30;
+        inkCol = mix(inkMid, inkDk, smoothstep(0., 1., f));
+      } else {
+        float f = min(1., (dB - 0.45) / 0.55);
+        inkCol = mix(inkDk, vec3(0.001, 0.001, 0.002), f*f);
+      }
+      vec3 col = mix(bg, inkCol, min(inkAlpha, 1.));
+
+      // ── White/cream pigment rendering ──
+      float whiteAlpha = smoothstep(0., 0.06, dW) * pow(max(dW, 0.), 0.70);
+      vec3 whiteCol;
+      if (dW < 0.2) {
+        whiteCol = mix(whiteShadow, whiteMid, dW / 0.2);
+      } else if (dW < 0.55) {
+        float f = (dW - 0.2) / 0.35;
+        whiteCol = mix(whiteMid, whiteOpaque, smoothstep(0., 1., f));
+      } else {
+        whiteCol = mix(whiteOpaque, vec3(1.0), min(1., (dW - 0.55)/0.45) * 0.4);
+      }
+
+      // Cream/white pigment creates soft shadowing on bg before it
+      // Use inverse: darken bg, then paint white on top
+      float shadowAmt = whiteAlpha * 0.12 * (1.0 - whiteAlpha * 0.5);
+      col = mix(col, col * (1.0 - shadowAmt), whiteAlpha);
+
+      // Then overlay white pigment with soft multiply-ish blend
+      vec3 whiteBlended = mix(col, whiteCol * col * 1.05, whiteAlpha * 0.85);
+      col = mix(col, whiteBlended, whiteAlpha);
+
+      // ── Marbled interference at boundaries ──
+      // Where both materials meet, create a subtle gradient interference
+      float both = dB * dW;
+      float boundary = smoothstep(0.01, 0.15, dB) * smoothstep(0.01, 0.15, dW) * both * 3.0;
+      vec3 boundaryCol = mix(vec3(0.75, 0.73, 0.70), vec3(0.12, 0.12, 0.14), dB / (dB + dW + 0.001));
+      col = mix(col, boundaryCol, min(boundary * 0.6, 0.25));
+
+      // ── Subtle vignette ──
+      vec2 vig = uv * 2. - 1.;
+      col *= mix(0.93, 1.0, 1.0 - dot(vig * 0.28, vig * 0.28));
+
       gl_FragColor = vec4(col, 1.0);
     }
   `;
 
-  // Compile all programs
+  // ════════════════════════════════════════════════
+  // COMPILE PROGRAMS
+  // ════════════════════════════════════════════════
   const prog = {
     adv:  createProgram(VS, ADVECT),
     div:  createProgram(VS, DIV),
@@ -544,21 +649,20 @@
     cur:  createProgram(VS, CURL),
     vor:  createProgram(VS, VORT),
     spl:  createProgram(VS, SPLAT),
-    inj:  createProgram(VS, INJECT),
+    injB: createProgram(VS, INJECT_B),
+    injW: createProgram(VS, INJECT_W),
     vis:  createProgram(VS, VISC),
     crl:  createProgram(VS, CURLN),
     dis:  createProgram(VS, DISPLAY),
   };
 
-  // Check all compiled
   let hasError = false;
   for (const [k, v] of Object.entries(prog)) {
-    if (!v) { console.error('Failed:', k); hasError = true; }
+    if (!v) { console.error('Shader failed:', k); hasError = true; }
   }
   if (hasError) {
     document.body.style.background = '#FAFAF8';
-    document.body.style.padding = '40px';
-    document.body.innerHTML = '<p style="font-family:sans-serif;font-size:14px;color:#333">WebGL shader error — check console</p>';
+    document.body.innerHTML = '<p style="font-family:sans-serif;font-size:14px;color:#333;padding:40px">WebGL shader error — check console</p>';
     throw new Error('Shader compile errors');
   }
 
@@ -571,7 +675,6 @@
     gl.uniform1i(gl.getUniformLocation(p, n), u);
   }
 
-  // ─── Blit to FBO or screen ───
   function blit(fbo, p) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.fbo : null);
     gl.viewport(0, 0, fbo ? fbo.w : W, fbo ? fbo.h : H);
@@ -581,22 +684,28 @@
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
-  // ─── Canvas and FBO sizing ───
+  // ════════════════════════════════════════════════
+  // SIMULATION SETUP
+  // ════════════════════════════════════════════════
   let W, H, simW, simH;
-  let vel, pre, div, crl, den;
+  let vel, pre, div, crl, denB, denW;
 
   function setup() {
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
-    simW = Math.max(1, Math.floor(W));
-    simH = Math.max(1, Math.floor(H));
+    // Use half resolution for performance with two density fields
+    simW = Math.max(1, Math.floor(W * 0.5));
+    simH = Math.max(1, Math.floor(H * 0.5));
     if (simW % 2 !== 0) simW--;
     if (simH % 2 !== 0) simH--;
     vel = makeDoubleFBO(simW, simH);
     pre = makeDoubleFBO(simW, simH);
     div = makeFBO(simW, simH);
     crl = makeFBO(simW, simH);
-    den = makeDoubleFBO(simW, simH);
+    // denB stores black ink density in .x
+    // denW stores white pigment density in .y
+    denB = makeDoubleFBO(simW, simH);
+    denW = makeDoubleFBO(simW, simH);
   }
   setup();
 
@@ -608,7 +717,6 @@
   let mx = 0, my = 0;
   let lmx = 0, lmy = 0;
 
-  // Mouse
   window.addEventListener('mousemove', e => {
     lmx = mx; lmy = my;
     mx = e.clientX;
@@ -619,13 +727,14 @@
     setup();
   });
 
-  // ─── Render loop ───
+  // ════════════════════════════════════════════════
+  // RENDER LOOP
+  // ════════════════════════════════════════════════
   function frame(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.033);
     lastTime = now;
     T += dt;
     const ts = tsv();
-    // guard against NaN/Infinity on first frame
     if (!isFinite(ts[0]) || !isFinite(ts[1]) || simW < 2 || simH < 2) {
       requestAnimationFrame(frame);
       return;
@@ -636,14 +745,14 @@
     gl.clearColor(0.980, 0.980, 0.972, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // 1. Curl noise → velocity
+    // 1. Ambient curl noise → velocity
     gl.useProgram(prog.crl);
     utex(prog.crl, 'uVel', 0, vel.read.tex);
     uni1f(prog.crl, 'uT', T);
     blit(vel.write, prog.crl);
     vel.swap();
 
-    // 2. Viscosity
+    // 2. Viscosity diffusion
     gl.useProgram(prog.vis);
     utex(prog.vis, 'uVel', 0, vel.read.tex);
     uni2f(prog.vis, 'uTS', ts[0], ts[1]);
@@ -661,65 +770,93 @@
     utex(prog.vor, 'uCurl', 1, crl.tex);
     uni2f(prog.vor, 'uTS', ts[0], ts[1]);
     uni1f(prog.vor, 'uDT', dt);
-    uni1f(prog.vor, 'uCS', 18.0);
+    uni1f(prog.vor, 'uCS', 22.0);
     blit(vel.write, prog.vor);
     vel.swap();
 
-    // 4. Mouse splat
+    // 4. Strong cursor disturbance
     const ddx = (mx - lmx) / W;
     const ddy = (my - lmy) / H;
     const spd = Math.sqrt(ddx * ddx + ddy * ddy);
-    if (spd > 0.00005) {
+    if (spd > 0.00003) {
       const mu = mx / W;
       const mv = my / H;
+
+      // Strong velocity push
       gl.useProgram(prog.spl);
       uni2f(prog.spl, 'uPt', mu, mv);
-      uni2f(prog.spl, 'uF', ddx * 22.0, ddy * 22.0);
-      uni1f(prog.spl, 'uR', 0.006);
+      uni2f(prog.spl, 'uF', ddx * 28.0, ddy * 28.0);
+      uni1f(prog.spl, 'uR', 0.008);
       uni1f(prog.spl, 'uA', aspect);
       uni1f(prog.spl, 'uD', 0.0);
       utex(prog.spl, 'uTgt', 0, vel.read.tex);
       blit(vel.write, prog.spl);
       vel.swap();
 
+      // Black ink disturbance — denser, smaller radius
+      gl.useProgram(prog.spl);
+      uni2f(prog.spl, 'uPt', mu, mv);
+      uni2f(prog.spl, 'uF', ddx * 0.5, ddy * 0.5);
+      uni1f(prog.spl, 'uR', 0.010);
+      uni1f(prog.spl, 'uA', aspect);
+      uni1f(prog.spl, 'uD', spd * 220.0);
+      utex(prog.spl, 'uTgt', 0, denB.read.tex);
+      blit(denB.write, prog.spl);
+      denB.swap();
+
+      // White/cream pigment disturbance — softer, wider
       gl.useProgram(prog.spl);
       uni2f(prog.spl, 'uPt', mu, mv);
       uni2f(prog.spl, 'uF', ddx * 0.4, ddy * 0.4);
-      uni1f(prog.spl, 'uR', 0.014);
+      uni1f(prog.spl, 'uR', 0.018);
       uni1f(prog.spl, 'uA', aspect);
-      uni1f(prog.spl, 'uD', spd * 180.0);
-      utex(prog.spl, 'uTgt', 0, den.read.tex);
-      blit(den.write, prog.spl);
-      den.swap();
+      uni1f(prog.spl, 'uD', spd * 160.0);
+      utex(prog.spl, 'uTgt', 0, denW.read.tex);
+      blit(denW.write, prog.spl);
+      denW.swap();
 
       lmx = mx; lmy = my;
     }
 
-    // 5. Ink injection
-    gl.useProgram(prog.inj);
-    utex(prog.inj, 'uDen', 0, den.read.tex);
-    uni1f(prog.inj, 'uT', T);
-    blit(den.write, prog.inj);
-    den.swap();
+    // 5. Ink injection — black sources
+    gl.useProgram(prog.injB);
+    utex(prog.injB, 'uDenB', 0, denB.read.tex);
+    uni1f(prog.injB, 'uT', T);
+    blit(denB.write, prog.injB);
+    denB.swap();
 
-    // 6. Advect velocity
+    // 6. White/cream pigment injection — offset sources
+    gl.useProgram(prog.injW);
+    utex(prog.injW, 'uDenW', 0, denW.read.tex);
+    uni1f(prog.injW, 'uT', T);
+    blit(denW.write, prog.injW);
+    denW.swap();
+
+    // 7. Advect velocity
     gl.useProgram(prog.adv);
     utex(prog.adv, 'uVel', 0, vel.read.tex);
     utex(prog.adv, 'uSrc', 1, vel.read.tex);
     uni2f(prog.adv, 'uTS', ts[0], ts[1]);
-    uni1f(prog.adv, 'uDT', dt * 6.0);
-    uni1f(prog.adv, 'uDISS', 0.9995);
+    uni1f(prog.adv, 'uDT', dt * 7.0);
+    uni1f(prog.adv, 'uDISS', 0.9994);
     blit(vel.write, prog.adv);
     vel.swap();
 
-    // 7. Advect density
+    // 8. Advect black ink density
     utex(prog.adv, 'uVel', 0, vel.read.tex);
-    utex(prog.adv, 'uSrc', 1, den.read.tex);
+    utex(prog.adv, 'uSrc', 1, denB.read.tex);
     uni1f(prog.adv, 'uDISS', 0.9988);
-    blit(den.write, prog.adv);
-    den.swap();
+    blit(denB.write, prog.adv);
+    denB.swap();
 
-    // 8. Pressure projection
+    // 9. Advect white pigment density
+    utex(prog.adv, 'uVel', 0, vel.read.tex);
+    utex(prog.adv, 'uSrc', 1, denW.read.tex);
+    uni1f(prog.adv, 'uDISS', 0.9990);
+    blit(denW.write, prog.adv);
+    denW.swap();
+
+    // 10. Pressure projection
     gl.useProgram(prog.div);
     utex(prog.div, 'uVel', 0, vel.read.tex);
     uni2f(prog.div, 'uTS', ts[0], ts[1]);
@@ -728,7 +865,7 @@
     gl.useProgram(prog.pre);
     utex(prog.pre, 'uDiv', 0, div.tex);
     uni2f(prog.pre, 'uTS', ts[0], ts[1]);
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 14; i++) {
       utex(prog.pre, 'uPres', 1, pre.read.tex);
       blit(pre.write, prog.pre);
       pre.swap();
@@ -741,7 +878,7 @@
     blit(vel.write, prog.gra);
     vel.swap();
 
-    // 9. Display
+    // 11. Display — composite both materials
     gl.useProgram(prog.dis);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, W, H);
@@ -749,7 +886,8 @@
     useProgram(prog.dis);
     uni1f(prog.dis, 'uT', T);
     uni2f(prog.dis, 'uTS', ts[0], ts[1]);
-    utex(prog.dis, 'uDen', 0, den.read.tex);
+    utex(prog.dis, 'uDenB', 0, denB.read.tex);
+    utex(prog.dis, 'uDenW', 1, denW.read.tex);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     requestAnimationFrame(frame);
