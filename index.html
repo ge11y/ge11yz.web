@@ -233,15 +233,15 @@
   </div>
 
   <script>
-  // ════════════════════════════════════════════════
-  // TWO-MATERIAL MARBLING — Black Ink + White/Cream Pigment
-  // Navier-Stokes with separate density fields
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
+  // OIL-ON-WATER — Thin Film Marbling
+  // Black oil slick + pale liquid zones + iridescent contours
+  // ═══════════════════════════════════════════════════════════
 
   const canvas = document.getElementById('ink-canvas');
   const gl = canvas.getContext('webgl', { alpha: false, antialias: false });
   if (!gl) {
-    document.body.style.background = '#FAFAF8';
+    document.body.style.background = '#e8e4de';
     throw new Error('No WebGL');
   }
 
@@ -251,7 +251,7 @@
     gl.shaderSource(s, src);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      console.error('Shader error:', gl.getShaderInfoLog(s), '\n---\n', src);
+      console.error('Shader error:', gl.getShaderInfoLog(s));
       return null;
     }
     return s;
@@ -272,7 +272,6 @@
     return p;
   }
 
-  // ─── Vertex shader ───
   const VS = `
     attribute vec2 aPos;
     varying vec2 vUv;
@@ -293,7 +292,6 @@
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   }
 
-  // ─── FBO helpers ───
   function makeFBO(w, h) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -318,9 +316,9 @@
     };
   }
 
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // SIMULATION SHADERS
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
 
   const ADVECT = `
     precision mediump float;
@@ -422,7 +420,6 @@
     }
   `;
 
-  // Splat: RGB = vel.xy, dens.z
   const SPLAT = `
     precision mediump float;
     uniform sampler2D uTgt;
@@ -441,60 +438,57 @@
     }
   `;
 
-  // Black ink injection (densB = x channel)
-  const INJECT_B = `
+  // Oil injection: x = black oil density
+  const INJECT_OIL = `
     precision mediump float;
-    uniform sampler2D uDenB;
+    uniform sampler2D uDen;
     uniform float uT;
     varying vec2 vUv;
     void main() {
-      float e = texture2D(uDenB, vUv).x;
-      float ink = 0.0;
-      // 3 drifting black ink sources
-      for (int i = 0; i < 3; i++) {
+      float e = texture2D(uDen, vUv).x;
+      float oil = 0.0;
+      for (int i = 0; i < 4; i++) {
         float fi = float(i);
-        float ph = uT * (0.022 + fi * 0.011);
+        float ph = uT * (0.018 + fi * 0.013);
         vec2 p;
-        p.x = 0.25 + 0.5 * sin(ph * 0.75 + fi * 2.618);
-        p.y = 0.30 + 0.4 * cos(ph * 0.55 + fi * 1.9);
+        p.x = 0.2 + 0.6 * sin(ph * 0.7 + fi * 2.414);
+        p.y = 0.25 + 0.5 * cos(ph * 0.52 + fi * 1.9);
         vec2 d = vUv - p;
-        float al = dot(d, vec2(cos(ph * 0.45 + fi), sin(ph * 0.45 + fi)));
-        float cr = abs(dot(d, vec2(-sin(ph * 0.45 + fi), cos(ph * 0.45 + fi))));
-        float el = max(0.0, 0.045 - al) / 0.045;
-        float na = max(0.0, 1.0 - cr / 0.016);
-        float amount = el * na * (0.35 + 0.65 * sin(uT * 0.06 + fi * 3.7)) * 0.07;
-        ink = max(ink, amount);
+        float al = dot(d, vec2(cos(ph * 0.4 + fi), sin(ph * 0.4 + fi)));
+        float cr = abs(dot(d, vec2(-sin(ph * 0.4 + fi), cos(ph * 0.4 + fi))));
+        float el = max(0.0, 0.05 - al) / 0.05;
+        float na = max(0.0, 1.0 - cr / 0.018);
+        float a = el * na * (0.3 + 0.7 * sin(uT * 0.055 + fi * 3.1)) * 0.08;
+        oil = max(oil, a);
       }
-      gl_FragColor = vec4(min(1.0, e + ink), 0.0, 0.0, 1.0);
+      gl_FragColor = vec4(min(1.0, e + oil), 0.0, 0.0, 1.0);
     }
   `;
 
-  // White/cream pigment injection (densW = y channel)
-  const INJECT_W = `
+  // Water/pale liquid injection: y = pale liquid density
+  const INJECT_WATER = `
     precision mediump float;
-    uniform sampler2D uDenW;
+    uniform sampler2D uDen;
     uniform float uT;
     varying vec2 vUv;
     void main() {
-      float e = texture2D(uDenW, vUv).y;
-      float ink = 0.0;
-      // 3 drifting white/cream pigment sources (offset phase from black)
+      float e = texture2D(uDen, vUv).y;
+      float liq = 0.0;
       for (int i = 0; i < 3; i++) {
         float fi = float(i);
-        float ph = uT * (0.018 + fi * 0.013) + 1.4;
+        float ph = uT * (0.015 + fi * 0.016) + 2.1;
         vec2 p;
-        p.x = 0.35 + 0.35 * sin(ph * 0.65 + fi * 1.9 + 1.0);
-        p.y = 0.40 + 0.35 * cos(ph * 0.48 + fi * 2.414);
+        p.x = 0.3 + 0.45 * sin(ph * 0.6 + fi * 1.8 + 1.5);
+        p.y = 0.35 + 0.4 * cos(ph * 0.45 + fi * 2.1 + 0.8);
         vec2 d = vUv - p;
-        float al = dot(d, vec2(cos(ph * 0.38 + fi + 0.5), sin(ph * 0.38 + fi + 0.5)));
-        float cr = abs(dot(d, vec2(-sin(ph * 0.38 + fi + 0.5), cos(ph * 0.38 + fi + 0.5))));
-        float el = max(0.0, 0.055 - al) / 0.055;
-        float na = max(0.0, 1.0 - cr / 0.022);
-        // slightly larger, softer ellipses for milky pigment
-        float amount = el * na * (0.4 + 0.6 * sin(uT * 0.055 + fi * 2.3 + 1.2)) * 0.055;
-        ink = max(ink, amount);
+        float al = dot(d, vec2(cos(ph * 0.35 + fi + 1.0), sin(ph * 0.35 + fi + 1.0)));
+        float cr = abs(dot(d, vec2(-sin(ph * 0.35 + fi + 1.0), cos(ph * 0.35 + fi + 1.0))));
+        float el = max(0.0, 0.06 - al) / 0.06;
+        float na = max(0.0, 1.0 - cr / 0.025);
+        float a = el * na * (0.35 + 0.65 * sin(uT * 0.048 + fi * 2.7 + 2.0)) * 0.065;
+        liq = max(liq, a);
       }
-      gl_FragColor = vec4(0.0, min(1.0, e + ink), 0.0, 1.0);
+      gl_FragColor = vec4(0.0, min(1.0, e + liq), 0.0, 1.0);
     }
   `;
 
@@ -509,10 +503,11 @@
                 texture2D(uVel, vUv + vec2(uTS.x,0)).xy +
                 texture2D(uVel, vUv - vec2(0,uTS.y)).xy +
                 texture2D(uVel, vUv + vec2(0,uTS.y)).xy) * 0.25;
-      gl_FragColor = vec4(mix(c, n, 0.015), 0.0, 1.0);
+      gl_FragColor = vec4(mix(c, n, 0.018), 0.0, 1.0);
     }
   `;
 
+  // Slow, large-scale curl noise for surface-tension-like motion
   const CURLN = `
     precision mediump float;
     uniform sampler2D uVel;
@@ -523,27 +518,30 @@
     float fbm(vec2 p,int o){float v=0.,a=.5,f=1.;for(int i=0;i<6;i++){if(i>=o)break;v+=a*n(p*f);a*=.5;f*=2.1;}return v;}
     void main() {
       vec2 uv = vUv;
-      vec2 w = vec2(fbm(uv*3.+uT*.03,5), fbm(uv*3.+uT*.026+5.3,5));
-      vec2 w2 = vec2(fbm(uv*2.5+w*2.+uT*.018,4), fbm(uv*2.5+w*2.+uT*.016+3.7,4));
-      float nx = fbm(uv*2.+w2+uT*.012,4);
-      float ny = fbm(uv*2.+w2+uT*.01+7.1,4);
-      float e = 0.004;
-      float dndx = (fbm(uv*2.+w2+vec2(e,0)+uT*.012,4)-nx)/e;
-      float dndy = (fbm(uv*2.+w2+vec2(0,e)+uT*.012,4)-ny)/e;
-      vec2 curl = vec2(dndy,-dndx)*0.35;
+      // Large-scale slow warp for surface-tension elasticity
+      vec2 w = vec2(fbm(uv*2. + uT*.022, 5), fbm(uv*2. + uT*.018 + 5.3, 5));
+      vec2 w2 = vec2(fbm(uv*1.5 + w*1.8 + uT*.014, 4), fbm(uv*1.5 + w*1.8 + uT*.011 + 3.7, 4));
+      float nx = fbm(uv*1.5 + w2 + uT*.008, 4);
+      float ny = fbm(uv*1.5 + w2 + uT*.007 + 7.1, 4);
+      float e = 0.006;
+      float dndx = (fbm(uv*1.5 + w2 + vec2(e,0) + uT*.008, 4) - nx) / e;
+      float dndy = (fbm(uv*1.5 + w2 + vec2(0,e) + uT*.008, 4) - ny) / e;
+      // Curl: rotate gradient by 90 degrees
+      vec2 curl = vec2(dndy, -dndx) * 0.3;
       vec2 vel = texture2D(uVel, uv).xy;
-      vel = (vel + curl) * 0.998;
+      vel = (vel + curl) * 0.997;
       gl_FragColor = vec4(vel, 0.0, 1.0);
     }
   `;
 
-  // ════════════════════════════════════════════════
-  // DISPLAY SHADER — two-material composite
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
+  // DISPLAY SHADER — Oil-on-water thin film
+  // x channel: black oil density
+  // y channel: pale liquid density
+  // ═══════════════════════════════════════════════════════════
   const DISPLAY = `
     precision mediump float;
-    uniform sampler2D uDenB;
-    uniform sampler2D uDenW;
+    uniform sampler2D uDen;
     uniform float uT;
     uniform vec2 uTS;
     varying vec2 vUv;
@@ -551,109 +549,172 @@
     float n(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}
     float fbm(vec2 p,int o){float v=0.,a=.5,f=1.;for(int i=0;i<6;i++){if(i>=o)break;v+=a*n(p*f);a*=.5;f*=2.1;}return v;}
 
+    // Thin-film iridescence: spectral colors based on film thickness proxy
+    vec3 iridescence(float t, float phase) {
+      // Map t (0..1 proxy for thickness) through spectral wavelengths
+      // Restrict to subtle gold-green-purple range
+      float s = mod(phase + t * 2.8, 2.8);
+      vec3 col = vec3(0.0);
+      // Gold band
+      col += vec3(0.95, 0.80, 0.35) * smoothstep(0.0, 0.4, s) * (1.0 - smoothstep(0.0, 0.4, s - 0.4));
+      // Green-teal band
+      col += vec3(0.30, 0.82, 0.65) * smoothstep(0.5, 1.0, s) * (1.0 - smoothstep(0.5, 1.0, s - 0.5));
+      // Purple-magenta band
+      col += vec3(0.72, 0.38, 0.88) * smoothstep(1.1, 1.7, s) * (1.0 - smoothstep(1.1, 1.7, s - 0.6));
+      // Blue band
+      col += vec3(0.30, 0.55, 0.92) * smoothstep(1.8, 2.5, s) * (1.0 - smoothstep(1.8, 2.5, s - 0.7));
+      return col * 0.55;
+    }
+
+    // Contour band intensity from gradient
+    float contourBand(float gradMag, float scale) {
+      float v = gradMag * scale;
+      // Sharp band + soft falloff on each side
+      float band = 1.0 - abs(fract(v) * 2.0 - 1.0);
+      return smoothstep(0.0, 0.05, band) * smoothstep(1.0, 0.7, band);
+    }
+
     void main() {
       vec2 uv = vUv;
+      vec2 ts = uTS;
 
-      // domain warp for each material independently
-      vec2 wB = vec2(fbm(uv*4. + uT*.018, 5), fbm(uv*4. + uT*.014 + 3.1, 5));
-      vec2 wB2 = vec2(fbm(uv*3. + wB*2. + uT*.012, 5), fbm(uv*3. + wB*2. + uT*.01 + 6.2, 5));
-      vec2 wW = vec2(fbm(uv*3.5 + uT*.016 + 1.7, 5), fbm(uv*3.5 + uT*.013 + 4.4, 5));
-      vec2 wW2 = vec2(fbm(uv*2.8 + wW*2.2 + uT*.011, 5), fbm(uv*2.8 + wW*2.2 + uT*.009 + 5.8, 5));
+      // Separate oil and water densities
+      float dO = texture2D(uDen, uv).x; // black oil
+      float dW = texture2D(uDen, uv).y; // pale liquid
 
-      // sample both density fields with their own warps
-      float dB = texture2D(uDenB, clamp(uv + wB2 * uTS * 2.5, 0.0, 1.0)).x;
-      float dW = texture2D(uDenW, clamp(uv + wW2 * uTS * 2.5, 0.0, 1.0)).y;
+      // ── Background: wet surface ──
+      vec3 bg = vec3(0.920, 0.912, 0.900);
+      vec3 bgDeep = vec3(0.860, 0.850, 0.840);
 
-      // internal marbling breakup per material
-      float marbB = fbm(uv*5. + wB2*2. + uT*.022, 4);
-      float marbW = fbm(uv*4.5 + wW2*2. + uT*.019 + 2.3, 4);
-      float detB  = fbm(uv*10. + uT*.038, 3);
-      float detW  = fbm(uv*9.  + uT*.032 + 1.1, 3);
+      // ── Domain warp each material ──
+      vec2 wO = vec2(fbm(uv*3.5 + uT*.015, 5), fbm(uv*3.5 + uT*.012 + 2.8, 5));
+      vec2 wO2 = vec2(fbm(uv*2.5 + wO*2. + uT*.010, 5), fbm(uv*2.5 + wO*2. + uT*.008 + 5.1, 5));
+      vec2 wW = vec2(fbm(uv*3. + uT*.013 + 1.4, 5), fbm(uv*3. + uT*.011 + 4.2, 5));
+      vec2 wW2 = vec2(fbm(uv*2.2 + wW*2. + uT*.009, 5), fbm(uv*2.2 + wW*2. + uT*.007 + 6.3, 5));
 
-      dB = mix(dB, dB*(0.5+0.8*marbB), 0.5);
-      dB += detB * 0.035 * max(dB, 0.);
-      dW = mix(dW, dW*(0.55+0.75*marbW), 0.45);
-      dW += detW * 0.03 * max(dW, 0.);
+      float dOw = texture2D(uDen, clamp(uv + wO2 * ts * 2.0, 0.0, 1.0)).x;
+      float dWw = texture2D(uDen, clamp(uv + wW2 * ts * 2.0, 0.0, 1.0)).y;
 
-      // ── Warm cream background ──
-      vec3 bg = vec3(0.980, 0.980, 0.972);
+      // Smooth, sifted marbling breakup (no noise explosion)
+      float mo = fbm(uv*4. + wO2*1.5 + uT*.018, 4);
+      float mw = fbm(uv*3.5 + wW2*1.5 + uT*.015 + 1.8, 4);
+      dOw = mix(dOw, dOw * (0.55 + 0.7 * mo), 0.4);
+      dWw = mix(dWw, dWw * (0.60 + 0.6 * mw), 0.35);
 
-      // ── Black ink colors ──
-      vec3 inkDk  = vec3(0.006, 0.006, 0.010);
-      vec3 inkMid = vec3(0.060, 0.060, 0.070);
-      vec3 inkLt  = vec3(0.150, 0.150, 0.165);
+      // ── OIL rendering ──
+      // Very smooth density → no sharp edges from simulation
+      float oilSmooth = pow(max(dOw, 0.0), 0.80);
+      float oilAlpha = smoothstep(0.0, 0.06, oilSmooth) * oilSmooth;
 
-      // ── White/cream pigment colors ──
-      vec3 whiteOpaque = vec3(0.970, 0.965, 0.955);  // bright cream
-      vec3 whiteMid    = vec3(0.930, 0.920, 0.900);  // mid cream
-      vec3 whiteShadow = vec3(0.820, 0.810, 0.790);  // soft shadow cream
+      // Oil colors: dark pools, glossy surface
+      vec3 oilDeep    = vec3(0.004, 0.004, 0.006);
+      vec3 oilMid     = vec3(0.028, 0.028, 0.034);
+      vec3 oilSheen   = vec3(0.080, 0.078, 0.090);
 
-      // ── Black ink rendering ──
-      float inkAlpha = smoothstep(0., 0.08, dB) * pow(max(dB, 0.), 0.55);
-      vec3 inkCol;
-      if (dB < 0.15) {
-        inkCol = mix(inkLt, inkMid, dB / 0.15);
-      } else if (dB < 0.45) {
-        float f = (dB - 0.15) / 0.30;
-        inkCol = mix(inkMid, inkDk, smoothstep(0., 1., f));
+      vec3 oilCol;
+      if (dOw < 0.18) {
+        oilCol = mix(oilSheen, oilMid, dOw / 0.18);
+      } else if (dOw < 0.55) {
+        float f = (dOw - 0.18) / 0.37;
+        oilCol = mix(oilMid, oilDeep, smoothstep(0., 1., f));
       } else {
-        float f = min(1., (dB - 0.45) / 0.55);
-        inkCol = mix(inkDk, vec3(0.001, 0.001, 0.002), f*f);
-      }
-      vec3 col = mix(bg, inkCol, min(inkAlpha, 1.));
-
-      // ── White/cream pigment rendering ──
-      float whiteAlpha = smoothstep(0., 0.06, dW) * pow(max(dW, 0.), 0.70);
-      vec3 whiteCol;
-      if (dW < 0.2) {
-        whiteCol = mix(whiteShadow, whiteMid, dW / 0.2);
-      } else if (dW < 0.55) {
-        float f = (dW - 0.2) / 0.35;
-        whiteCol = mix(whiteMid, whiteOpaque, smoothstep(0., 1., f));
-      } else {
-        whiteCol = mix(whiteOpaque, vec3(1.0), min(1., (dW - 0.55)/0.45) * 0.4);
+        float f = min(1., (dOw - 0.55) / 0.45);
+        oilCol = mix(oilDeep, vec3(0.001, 0.001, 0.002), f * f);
       }
 
-      // Cream/white pigment creates soft shadowing on bg before it
-      // Use inverse: darken bg, then paint white on top
-      float shadowAmt = whiteAlpha * 0.12 * (1.0 - whiteAlpha * 0.5);
-      col = mix(col, col * (1.0 - shadowAmt), whiteAlpha);
+      // ── PALE LIQUID rendering ──
+      float liqSmooth = pow(max(dWw, 0.0), 0.75);
+      float liqAlpha = smoothstep(0.0, 0.05, liqSmooth) * liqSmooth;
 
-      // Then overlay white pigment with soft multiply-ish blend
-      vec3 whiteBlended = mix(col, whiteCol * col * 1.05, whiteAlpha * 0.85);
-      col = mix(col, whiteBlended, whiteAlpha);
+      // Pale liquid: silver-gray, cream, translucent
+      vec3 liqLight  = vec3(0.970, 0.968, 0.960);  // almost white
+      vec3 liqMid    = vec3(0.880, 0.875, 0.868);  // silver-gray
+      vec3 liqShadow = vec3(0.740, 0.735, 0.728);  // deeper shadow gray
 
-      // ── Marbled interference at boundaries ──
-      // Where both materials meet, create a subtle gradient interference
-      float both = dB * dW;
-      float boundary = smoothstep(0.01, 0.15, dB) * smoothstep(0.01, 0.15, dW) * both * 3.0;
-      vec3 boundaryCol = mix(vec3(0.75, 0.73, 0.70), vec3(0.12, 0.12, 0.14), dB / (dB + dW + 0.001));
-      col = mix(col, boundaryCol, min(boundary * 0.6, 0.25));
+      vec3 liqCol;
+      if (dWw < 0.2) {
+        liqCol = mix(liqShadow, liqMid, dWw / 0.2);
+      } else if (dWw < 0.6) {
+        float f = (dWw - 0.2) / 0.4;
+        liqCol = mix(liqMid, liqLight, smoothstep(0., 1., f));
+      } else {
+        float f = min(1., (dWw - 0.6) / 0.4);
+        liqCol = mix(liqLight, vec3(1.0), f * 0.3);
+      }
 
-      // ── Subtle vignette ──
+      // ── COMPOSITE ──
+      // Start with background
+      vec3 col = bg;
+
+      // Oil creates dark pools: paint over background with slight multiply
+      col = mix(col, col * oilCol * 1.05, min(oilAlpha, 0.92));
+
+      // Pale liquid: soft multiply, stays translucent
+      // First darken bg slightly under liquid (depth illusion)
+      col = mix(col, col * 0.94, min(liqAlpha * 0.6, 1.0));
+      // Then paint liquid on top with multiply
+      col = mix(col, col * liqCol * 1.06, min(liqAlpha, 0.88));
+
+      // ── THIN-FILM IRIDESCENT CONTOURS ──
+      // Where oil and water meet (both densities present at similar levels)
+      float both = smoothstep(0.03, 0.2, dOw) * smoothstep(0.03, 0.2, dWw);
+      float ratio = dOw / (dOw + dWw + 0.001);
+      float boundary = both * (0.5 + 0.5 * sin(dOw * dWw * 40.0 + uT * 0.08));
+      boundary = both * pow(abs(dOw - dWw) / (dOw + dWw + 0.001), 1.2) * 2.5;
+      boundary = both * smoothstep(0.05, 0.5, boundary);
+
+      if (boundary > 0.01) {
+        // Compute gradient of density field to get contour direction
+        float e = ts.x * 1.5;
+        float dL = texture2D(uDen, clamp(uv - vec2(e, 0.), 0., 1.)).x + texture2D(uDen, clamp(uv - vec2(e, 0.), 0., 1.)).y;
+        float dR = texture2D(uDen, clamp(uv + vec2(e, 0.), 0., 1.)).x + texture2D(uDen, clamp(uv + vec2(e, 0.), 0., 1.)).y;
+        float dB = texture2D(uDen, clamp(uv - vec2(0., e), 0., 1.)).x + texture2D(uDen, clamp(uv - vec2(0., e), 0., 1.)).y;
+        float dT = texture2D(uDen, clamp(uv + vec2(0., e), 0., 1.)).x + texture2D(uDen, clamp(uv + vec2(0., e), 0., 1.)).y;
+        float gradMag = length(vec2(dR - dL, dT - dB)) * 0.5;
+
+        // Contour bands: smooth flowing lines
+        float cont = contourBand(gradMag, 18.0);
+        cont += contourBand(gradMag, 9.0) * 0.4;
+
+        // Iridescent color keyed to gradient angle + time
+        float angle = atan(dT - dB, dR - dL);
+        float iriPhase = angle * 1.8 + uT * 0.04 + ratio * 3.14;
+        vec3 iri = iridescence(gradMag * 4.0, iriPhase);
+
+        // Apply iridescence only at boundaries with contour enhancement
+        col = mix(col, col + iri * cont * 0.45, min(boundary * 0.5, 0.35));
+      }
+
+      // ── Subtle glossy specular highlight on oil ──
+      // High-frequency darkening in very dense oil areas
+      float spec = fbm(uv * 12. + uT * 0.06, 3);
+      float oilSpec = smoothstep(0.5, 0.85, dOw) * spec * 0.06;
+      col = col * (1.0 - oilSpec);
+
+      // ── Soft vignette ──
       vec2 vig = uv * 2. - 1.;
-      col *= mix(0.93, 1.0, 1.0 - dot(vig * 0.28, vig * 0.28));
+      col *= mix(0.94, 1.0, 1.0 - dot(vig * 0.26, vig * 0.26));
 
       gl_FragColor = vec4(col, 1.0);
     }
   `;
 
-  // ════════════════════════════════════════════════
-  // COMPILE PROGRAMS
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
+  // COMPILE
+  // ═══════════════════════════════════════════════════════════
   const prog = {
-    adv:  createProgram(VS, ADVECT),
-    div:  createProgram(VS, DIV),
-    pre:  createProgram(VS, PRESS),
-    gra:  createProgram(VS, GRAD),
-    cur:  createProgram(VS, CURL),
-    vor:  createProgram(VS, VORT),
-    spl:  createProgram(VS, SPLAT),
-    injB: createProgram(VS, INJECT_B),
-    injW: createProgram(VS, INJECT_W),
-    vis:  createProgram(VS, VISC),
-    crl:  createProgram(VS, CURLN),
-    dis:  createProgram(VS, DISPLAY),
+    adv:    createProgram(VS, ADVECT),
+    div:    createProgram(VS, DIV),
+    pre:    createProgram(VS, PRESS),
+    gra:    createProgram(VS, GRAD),
+    cur:    createProgram(VS, CURL),
+    vor:    createProgram(VS, VORT),
+    spl:    createProgram(VS, SPLAT),
+    injOil: createProgram(VS, INJECT_OIL),
+    injWat: createProgram(VS, INJECT_WATER),
+    vis:    createProgram(VS, VISC),
+    crl:    createProgram(VS, CURLN),
+    dis:    createProgram(VS, DISPLAY),
   };
 
   let hasError = false;
@@ -661,12 +722,11 @@
     if (!v) { console.error('Shader failed:', k); hasError = true; }
   }
   if (hasError) {
-    document.body.style.background = '#FAFAF8';
-    document.body.innerHTML = '<p style="font-family:sans-serif;font-size:14px;color:#333;padding:40px">WebGL shader error — check console</p>';
+    document.body.style.background = '#e8e4de';
+    document.body.innerHTML = '<p style="font-family:sans-serif;font-size:14px;color:#333;padding:40px">Shader error — check console</p>';
     throw new Error('Shader compile errors');
   }
 
-  // ─── Uniform helpers ───
   function uni1f(p, n, v) { gl.uniform1f(gl.getUniformLocation(p, n), v); }
   function uni2f(p, n, x, y) { gl.uniform2f(gl.getUniformLocation(p, n), x, y); }
   function utex(p, n, u, t) {
@@ -684,16 +744,16 @@
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // SIMULATION SETUP
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   let W, H, simW, simH;
-  let vel, pre, div, crl, denB, denW;
+  let vel, pre, div, crl, den;
 
   function setup() {
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
-    // Use half resolution for performance with two density fields
+    // Half-res simulation for performance (oil + water in one texture)
     simW = Math.max(1, Math.floor(W * 0.5));
     simH = Math.max(1, Math.floor(H * 0.5));
     if (simW % 2 !== 0) simW--;
@@ -702,16 +762,13 @@
     pre = makeDoubleFBO(simW, simH);
     div = makeFBO(simW, simH);
     crl = makeFBO(simW, simH);
-    // denB stores black ink density in .x
-    // denW stores white pigment density in .y
-    denB = makeDoubleFBO(simW, simH);
-    denW = makeDoubleFBO(simW, simH);
+    // Single texture: x = oil density, y = pale liquid density
+    den = makeDoubleFBO(simW, simH);
   }
   setup();
 
   const tsv = () => [1.0 / simW, 1.0 / simH];
 
-  // ─── State ───
   let lastTime = 0;
   let T = 0;
   let mx = 0, my = 0;
@@ -727,9 +784,9 @@
     setup();
   });
 
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   // RENDER LOOP
-  // ════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════
   function frame(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.033);
     lastTime = now;
@@ -742,24 +799,24 @@
     const aspect = W / H;
 
     gl.disable(gl.BLEND);
-    gl.clearColor(0.980, 0.980, 0.972, 1.0);
+    gl.clearColor(0.920, 0.912, 0.900, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // 1. Ambient curl noise → velocity
+    // 1. Curl noise — slow, large-scale for surface tension
     gl.useProgram(prog.crl);
     utex(prog.crl, 'uVel', 0, vel.read.tex);
     uni1f(prog.crl, 'uT', T);
     blit(vel.write, prog.crl);
     vel.swap();
 
-    // 2. Viscosity diffusion
+    // 2. Viscosity — higher mixing for oily behavior
     gl.useProgram(prog.vis);
     utex(prog.vis, 'uVel', 0, vel.read.tex);
     uni2f(prog.vis, 'uTS', ts[0], ts[1]);
     blit(vel.write, prog.vis);
     vel.swap();
 
-    // 3. Vorticity confinement
+    // 3. Vorticity — stronger confinement for swirling patterns
     gl.useProgram(prog.cur);
     utex(prog.cur, 'uVel', 0, vel.read.tex);
     uni2f(prog.cur, 'uTS', ts[0], ts[1]);
@@ -770,11 +827,11 @@
     utex(prog.vor, 'uCurl', 1, crl.tex);
     uni2f(prog.vor, 'uTS', ts[0], ts[1]);
     uni1f(prog.vor, 'uDT', dt);
-    uni1f(prog.vor, 'uCS', 22.0);
+    uni1f(prog.vor, 'uCS', 25.0);
     blit(vel.write, prog.vor);
     vel.swap();
 
-    // 4. Strong cursor disturbance
+    // 4. Cursor — strong surface disturbance
     const ddx = (mx - lmx) / W;
     const ddy = (my - lmy) / H;
     const spd = Math.sqrt(ddx * ddx + ddy * ddy);
@@ -782,81 +839,74 @@
       const mu = mx / W;
       const mv = my / H;
 
-      // Strong velocity push
+      // Velocity — strong directional push
       gl.useProgram(prog.spl);
       uni2f(prog.spl, 'uPt', mu, mv);
-      uni2f(prog.spl, 'uF', ddx * 28.0, ddy * 28.0);
-      uni1f(prog.spl, 'uR', 0.008);
+      uni2f(prog.spl, 'uF', ddx * 32.0, ddy * 32.0);
+      uni1f(prog.spl, 'uR', 0.012);
       uni1f(prog.spl, 'uA', aspect);
       uni1f(prog.spl, 'uD', 0.0);
       utex(prog.spl, 'uTgt', 0, vel.read.tex);
       blit(vel.write, prog.spl);
       vel.swap();
 
-      // Black ink disturbance — denser, smaller radius
+      // Oil disturbance at cursor — tighter, heavier
+      gl.useProgram(prog.spl);
+      uni2f(prog.spl, 'uPt', mu, mv);
+      uni2f(prog.spl, 'uF', ddx * 0.6, ddy * 0.6);
+      uni1f(prog.spl, 'uR', 0.012);
+      uni1f(prog.spl, 'uA', aspect);
+      uni1f(prog.spl, 'uD', spd * 250.0);
+      utex(prog.spl, 'uTgt', 0, den.read.tex);
+      blit(den.write, prog.spl);
+      den.swap();
+
+      // Pale liquid disturbance at cursor — wider, softer
       gl.useProgram(prog.spl);
       uni2f(prog.spl, 'uPt', mu, mv);
       uni2f(prog.spl, 'uF', ddx * 0.5, ddy * 0.5);
-      uni1f(prog.spl, 'uR', 0.010);
+      uni1f(prog.spl, 'uR', 0.022);
       uni1f(prog.spl, 'uA', aspect);
-      uni1f(prog.spl, 'uD', spd * 220.0);
-      utex(prog.spl, 'uTgt', 0, denB.read.tex);
-      blit(denB.write, prog.spl);
-      denB.swap();
-
-      // White/cream pigment disturbance — softer, wider
-      gl.useProgram(prog.spl);
-      uni2f(prog.spl, 'uPt', mu, mv);
-      uni2f(prog.spl, 'uF', ddx * 0.4, ddy * 0.4);
-      uni1f(prog.spl, 'uR', 0.018);
-      uni1f(prog.spl, 'uA', aspect);
-      uni1f(prog.spl, 'uD', spd * 160.0);
-      utex(prog.spl, 'uTgt', 0, denW.read.tex);
-      blit(denW.write, prog.spl);
-      denW.swap();
+      uni1f(prog.spl, 'uD', spd * 180.0);
+      utex(prog.spl, 'uTgt', 0, den.read.tex);
+      blit(den.write, prog.spl);
+      den.swap();
 
       lmx = mx; lmy = my;
     }
 
-    // 5. Ink injection — black sources
-    gl.useProgram(prog.injB);
-    utex(prog.injB, 'uDenB', 0, denB.read.tex);
-    uni1f(prog.injB, 'uT', T);
-    blit(denB.write, prog.injB);
-    denB.swap();
+    // 5. Inject oil sources
+    gl.useProgram(prog.injOil);
+    utex(prog.injOil, 'uDen', 0, den.read.tex);
+    uni1f(prog.injOil, 'uT', T);
+    blit(den.write, prog.injOil);
+    den.swap();
 
-    // 6. White/cream pigment injection — offset sources
-    gl.useProgram(prog.injW);
-    utex(prog.injW, 'uDenW', 0, denW.read.tex);
-    uni1f(prog.injW, 'uT', T);
-    blit(denW.write, prog.injW);
-    denW.swap();
+    // 6. Inject pale liquid sources
+    gl.useProgram(prog.injWat);
+    utex(prog.injWat, 'uDen', 0, den.read.tex);
+    uni1f(prog.injWat, 'uT', T);
+    blit(den.write, prog.injWat);
+    den.swap();
 
-    // 7. Advect velocity
+    // 7. Advect velocity — slower advection for oily drift
     gl.useProgram(prog.adv);
     utex(prog.adv, 'uVel', 0, vel.read.tex);
     utex(prog.adv, 'uSrc', 1, vel.read.tex);
     uni2f(prog.adv, 'uTS', ts[0], ts[1]);
-    uni1f(prog.adv, 'uDT', dt * 7.0);
-    uni1f(prog.adv, 'uDISS', 0.9994);
+    uni1f(prog.adv, 'uDT', dt * 5.0);
+    uni1f(prog.adv, 'uDISS', 0.9995);
     blit(vel.write, prog.adv);
     vel.swap();
 
-    // 8. Advect black ink density
+    // 8. Advect oil density — very slow dissipation for pools
     utex(prog.adv, 'uVel', 0, vel.read.tex);
-    utex(prog.adv, 'uSrc', 1, denB.read.tex);
-    uni1f(prog.adv, 'uDISS', 0.9988);
-    blit(denB.write, prog.adv);
-    denB.swap();
+    utex(prog.adv, 'uSrc', 1, den.read.tex);
+    uni1f(prog.adv, 'uDISS', 0.9992);
+    blit(den.write, prog.adv);
+    den.swap();
 
-    // 9. Advect white pigment density
-    utex(prog.adv, 'uVel', 0, vel.read.tex);
-    utex(prog.adv, 'uSrc', 1, denW.read.tex);
-    uni1f(prog.adv, 'uDISS', 0.9990);
-    blit(denW.write, prog.adv);
-    denW.swap();
-
-    // 10. Pressure projection
+    // 9. Pressure projection
     gl.useProgram(prog.div);
     utex(prog.div, 'uVel', 0, vel.read.tex);
     uni2f(prog.div, 'uTS', ts[0], ts[1]);
@@ -878,7 +928,7 @@
     blit(vel.write, prog.gra);
     vel.swap();
 
-    // 11. Display — composite both materials
+    // 10. Display
     gl.useProgram(prog.dis);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, W, H);
@@ -886,8 +936,7 @@
     useProgram(prog.dis);
     uni1f(prog.dis, 'uT', T);
     uni2f(prog.dis, 'uTS', ts[0], ts[1]);
-    utex(prog.dis, 'uDenB', 0, denB.read.tex);
-    utex(prog.dis, 'uDenW', 1, denW.read.tex);
+    utex(prog.dis, 'uDen', 0, den.read.tex);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     requestAnimationFrame(frame);
