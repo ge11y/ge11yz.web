@@ -58,6 +58,11 @@ fetch("config.json")
   });
 
 function runSimulation(config) {
+  // Expose globals for easter egg
+  window.config = config;
+  window.splat = splat;
+  window.HSVtoRGB = HSVtoRGB;
+
   function pointerPrototype() {
     this.id = -1;
     this.texcoordX = 0;
@@ -1711,8 +1716,18 @@ function runSimulation(config) {
     pointer.prevTexcoordY = pointer.texcoordY;
     pointer.texcoordX = posX / canvas.width;
     pointer.texcoordY = 1.0 - posY / canvas.height;
-    pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
-    pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
+    let dx = pointer.texcoordX - pointer.prevTexcoordX;
+    let dy = pointer.texcoordY - pointer.prevTexcoordY;
+
+    // Circular swirl: add perpendicular component to create swirling motion
+    let swirlStrength = 2.2;
+    let perpDx = -dy * swirlStrength;
+    let perpDy = dx * swirlStrength;
+    dx += perpDx;
+    dy += perpDy;
+
+    pointer.deltaX = correctDeltaX(dx);
+    pointer.deltaY = correctDeltaY(dy);
     pointer.moved =
       Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
   }

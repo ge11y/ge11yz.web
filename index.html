@@ -12,11 +12,14 @@
 </head>
 <body>
   <canvas></canvas>
+  <div class="screen-flash" id="screenFlash"></div>
 
   <div class="page-content">
     <header>
       <div class="header-inner">
-        <div class="logo">ge11y<span>z</span></div>
+        <div class="logo" id="logo">
+          <span class="logo-text">ge11y<span class="logo-z">z</span></span>
+        </div>
         <p class="header-tagline">Selected Works</p>
       </div>
     </header>
@@ -101,5 +104,62 @@
   </div>
 
   <script src="webgl-fluid.js"></script>
+  <script>
+    // Color palette for the easter egg
+    const palettes = [
+      { SPLAT_HUE: 0.14, name: 'amber' },           // goldenrod warm
+      { SPLAT_HUE: 0.58, name: 'teal' },            // teal ocean
+      { SPLAT_HUE: 0.72, name: 'violet' },          // violet
+      { SPLAT_HUE: 0.02, name: 'crimson' },         // deep red
+      { SPLAT_HUE: 0.50, name: 'cyan' },            // electric blue
+      { SPLAT_HUE: 0.82, name: 'rose' },            // magenta rose
+      { SPLAT_HUE: 0.28, name: 'forest' },         // deep green
+      { SPLAT_HUE: 0.95, name: 'copper' },          // copper orange
+    ];
+    let paletteIndex = 0;
+    let pulseCount = 0;
+
+    // Inject a large multi-color splat into the fluid
+    function colorBurst() {
+      // Splat multiple times with different hues to create a burst
+      let count = 6;
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          let hue = (config.SPLAT_HUE + i * 0.12) % 1.0;
+          let c = HSVtoRGB(hue, 0.9, 0.85);
+          c.r *= 1.5; c.g *= 1.5; c.b *= 1.5;
+          let x = 0.3 + Math.random() * 0.4;
+          let y = 0.3 + Math.random() * 0.4;
+          let dx = (Math.random() - 0.5) * 10000;
+          let dy = (Math.random() - 0.5) * 10000;
+          splat(x, y, dx, dy, c);
+        }, i * 40);
+      }
+    }
+
+    // Logo click — cycle color palette
+    const logo = document.getElementById('logo');
+    const flash = document.getElementById('screenFlash');
+    const configObj = window.config || { SPLAT_HUE: 0.14 };
+
+    logo.addEventListener('click', () => {
+      paletteIndex = (paletteIndex + 1) % palettes.length;
+      const p = palettes[paletteIndex];
+      config.SPLAT_HUE = p.SPLAT_HUE;
+
+      // Logo pulse animation
+      logo.classList.remove('pulse');
+      void logo.offsetWidth; // force reflow
+      logo.classList.add('pulse');
+
+      // Screen flash
+      flash.classList.remove('active');
+      void flash.offsetWidth;
+      flash.classList.add('active');
+
+      // Color burst splat
+      colorBurst();
+    });
+  </script>
 </body>
 </html>

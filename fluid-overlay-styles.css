@@ -51,11 +51,58 @@ header {
   letter-spacing: 0.18em;
   color: #F5E6D3;
   text-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+  user-select: none;
+}
+
+.logo:hover {
+  color: #fff;
+  text-shadow: 0 0 20px rgba(245, 230, 211, 0.4);
 }
 
 .logo span {
   color: #3a3a3a;
   text-shadow: none;
+}
+
+.logo-z {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logo:active .logo-z {
+  transform: scale(1.4) rotate(10deg);
+}
+
+.logo.pulse {
+  animation: logoPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes logoPulse {
+  0%   { transform: scale(1); color: #F5E6D3; }
+  40%  { transform: scale(1.35); color: #fff; text-shadow: 0 0 40px rgba(255,255,255,0.9); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); color: #F5E6D3; }
+}
+
+/* Screen flash on logo click */
+.screen-flash {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+}
+
+.screen-flash.active {
+  animation: screenFlash 0.55s ease-out forwards;
+}
+
+@keyframes screenFlash {
+  0%   { opacity: 0; background: rgba(255,255,255,0); }
+  15%  { opacity: 1; background: rgba(255,255,255,0.18); }
+  100% { opacity: 0; background: rgba(255,255,255,0); }
 }
 
 .header-tagline {
