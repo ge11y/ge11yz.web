@@ -273,7 +273,14 @@
   }
 
   // ─── Fullscreen quad setup ───
-  const VS = `attribute vec2 aPos; void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+  const VS = `
+    attribute vec2 aPos;
+    varying vec2 vUv;
+    void main() {
+      vUv = aPos * 0.5 + 0.5;
+      gl_Position = vec4(aPos, 0.0, 1.0);
+    }
+  `;
   const quadBuf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
@@ -507,7 +514,8 @@
       // domain warp
       vec2 w = vec2(fbm(uv*4.+uT*.02,5), fbm(uv*4.+uT*.016+3.3,5));
       vec2 w2 = vec2(fbm(uv*3.+w*2.5+uT*.015,5), fbm(uv*3.+w*2.5+uT*.012+6.1,5));
-      float d = texture2D(uDen, uv + w2 * uTS * 5.0).z;
+      // sample density — warp offset scaled by texelSize so it stays within bounds
+      float d = texture2D(uDen, clamp(uv + w2 * uTS * 2.0, 0.0, 1.0)).z;
       float marb = fbm(uv*5.+w2*2.5+uT*.025,4);
       float det = fbm(uv*10.+uT*.04,3);
       d = mix(d, d*(0.55+0.75*marb), 0.5);
@@ -543,8 +551,20 @@
   };
 
   // Check all compiled
+  let hasError = false;
   for (const [k, v] of Object.entries(prog)) {
-    if (!v) console.error('Failed:', k);
+    if (!v) { console.error('Failed:', k); hasError = true; }
+  }
+  if (hasError) {
+    document.body.style.background = '#FAFAF8';
+    document.body.style.padding = '40px';
+    document.body.innerHTML = '<p style="font-family:sans-serif;font-size:14px;color:#333">WebGL shader error — check console</p>';
+    throw new Error('Shader compile errors');
+  }
+
+  // Warn if half-float not available
+  if (!extFloat && !extHalf) {
+    console.warn('No float texture support, using UNSIGNED_BYTE');
   }
 
   // ─── Uniform helpers ───
@@ -610,9 +630,16 @@
     lastTime = now;
     T += dt;
     const ts = tsv();
+    // guard against NaN/Infinity on first frame
+    if (!isFinite(ts[0]) || !isFinite(ts[1]) || simW < 2 || simH < 2) {
+      requestAnimationFrame(frame);
+      return;
+    }
     const aspect = W / H;
 
     gl.disable(gl.BLEND);
+    gl.clearColor(0.980, 0.980, 0.972, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     // 1. Curl noise → velocity
     gl.useProgram(prog.crl);
