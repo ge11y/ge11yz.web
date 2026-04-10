@@ -562,11 +562,6 @@
     throw new Error('Shader compile errors');
   }
 
-  // Warn if half-float not available
-  if (!extFloat && !extHalf) {
-    console.warn('No float texture support, using UNSIGNED_BYTE');
-  }
-
   // ─── Uniform helpers ───
   function uni1f(p, n, v) { gl.uniform1f(gl.getUniformLocation(p, n), v); }
   function uni2f(p, n, x, y) { gl.uniform2f(gl.getUniformLocation(p, n), x, y); }
