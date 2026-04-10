@@ -675,7 +675,7 @@
   let W = canvas.width = window.innerWidth;
   let H = canvas.height = window.innerHeight;
 
-  const SIM_SCALE = 2.5; // simulation at 250% viewport for silky smooth fluid
+  const SIM_SCALE = 0.85; // simulation at 85% viewport — balance of smoothness and memory
   let simW = Math.floor(W * SIM_SCALE);
   let simH = Math.floor(H * SIM_SCALE);
 
@@ -826,8 +826,8 @@
     // ── 6. Advect velocity ──
     gl.useProgram(advProg);
     u2f(advProg, 'uTexelSize', texelSizeVel[0], texelSizeVel[1]);
-    u1f(advProg, 'uDt', dt * 60.0);
-    u1f(advProg, 'uDissipation', 0.998);
+    u1f(advProg, 'uDt', dt * 12.0);
+    u1f(advProg, 'uDissipation', 0.9992);
     u1f(advProg, 'uScale', 1.0);
     uTex(advProg, 'uVelocity', 0, velDB.read.tex);
     uTex(advProg, 'uSource', 1, velDB.read.tex);
