@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    
     :root {
       --cream: #F5E6D3;
       --ink: #1a1a1a;
@@ -17,9 +16,7 @@
       --bg: #FAFAF8;
       --divider: rgba(20, 20, 20, 0.08);
     }
-    
     html { scroll-behavior: smooth; }
-    
     body {
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
@@ -29,7 +26,6 @@
       line-height: 1.7;
       overflow-x: hidden;
     }
-    
     #ink-canvas {
       position: fixed;
       top: 0; left: 0;
@@ -37,9 +33,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    
     .content { position: relative; z-index: 1; }
-    
     header { padding: 80px 60px 60px; }
     .header-inner { max-width: 1100px; margin: 0 auto; }
     .logo {
@@ -62,7 +56,6 @@
       opacity: 0.35;
       margin-top: 18px;
     }
-    
     .hero { padding: 100px 60px 80px; max-width: 1100px; margin: 0 auto; }
     .hero-title {
       font-family: 'Cormorant Garamond', serif;
@@ -80,10 +73,8 @@
       max-width: 360px;
       line-height: 1.85;
     }
-    
     .divider { max-width: 1100px; margin: 0 auto; padding: 0 60px; }
     .divider hr { border: none; border-top: 1px solid var(--divider); }
-    
     .projects-section { padding: 70px 60px 100px; max-width: 1100px; margin: 0 auto; }
     .section-label {
       font-family: 'Cormorant Garamond', serif;
@@ -135,7 +126,6 @@
       transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
       flex-shrink: 0;
     }
-    
     footer { padding: 70px 60px; max-width: 1100px; margin: 0 auto; }
     .footer-inner { display: flex; justify-content: space-between; align-items: center; }
     .footer-text {
@@ -147,7 +137,6 @@
     }
     .footer-text a { color: inherit; text-decoration: none; transition: opacity 0.3s ease; }
     .footer-text a:hover { opacity: 0.7; }
-    
     @media (max-width: 768px) {
       header { padding: 55px 28px 40px; }
       .hero { padding: 70px 28px 60px; }
@@ -162,7 +151,6 @@
 </head>
 <body>
   <canvas id="ink-canvas"></canvas>
-  
   <div class="content">
     <header>
       <div class="header-inner">
@@ -170,14 +158,11 @@
         <p class="header-tagline">Selected Works</p>
       </div>
     </header>
-    
     <section class="hero">
       <h1 class="hero-title">Ideas in motion,<br><em>projects in form.</em></h1>
       <p class="hero-sub">A collection of experiments, tools, and explorations at the intersection of technology and design.</p>
     </section>
-    
     <div class="divider"><hr></div>
-    
     <section class="projects-section">
       <p class="section-label">Projects</p>
       <ul class="projects-list">
@@ -239,9 +224,7 @@
         </li>
       </ul>
     </section>
-    
     <div class="divider"><hr></div>
-    
     <footer>
       <div class="footer-inner">
         <p class="footer-text">© 2026 ge11yz</p>
@@ -249,39 +232,46 @@
       </div>
     </footer>
   </div>
-  
+
   <script>
+    // ════════════════════════════════════════════════
+    // EULERIAN FLUID SIMULATION — Ink in Water
+    // Grid: velocity + density, semi-Lagrangian advect
+    // ════════════════════════════════════════════════
+    
     const canvas = document.getElementById('ink-canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     
     let W, H;
+    let GRID = 3; // pixels per cell — smaller = finer fluid
+    let gw, gh; // grid dimensions
+    
+    // Velocity fields
+    let vx, vy;        // current velocity
+    let vx0, vy0;      // previous velocity (ping-pong)
+    let vxTemp, vyTemp;
+    
+    // Density field (ink concentration 0-1)
+    let density, densityTemp;
+    
+    // Pressure fields
+    let pressure, pressureTemp;
+    let divField;
+    
+    // Mouse state
+    let mouseX = -9999, mouseY = -9999;
+    let lastMouseX = -9999, lastMouseY = -9999;
+    let mouseDown = false;
+    let cursorAge = 0;
+    
     let t = 0;
     let lastTime = 0;
     
-    // ─── Low-res density canvas for performance ───
-    let densityCanvas, densityCtx;
-    let DENSITY_SCALE = 4;
-    
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-      
-      densityCanvas = document.createElement('canvas');
-      densityCanvas.width = Math.ceil(W / DENSITY_SCALE);
-      densityCanvas.height = Math.ceil(H / DENSITY_SCALE);
-      densityCtx = densityCanvas.getContext('2d');
-      
-      // pre-fill with very low black to seed density
-      densityCtx.fillStyle = 'rgba(0,0,0,0.008)';
-      densityCtx.fillRect(0, 0, densityCanvas.width, densityCanvas.height);
-    }
-    
-    // ─── Hash + smooth noise ───
+    // ─── Perlin-like noise ───
     function hash(px, py) {
-      const h = Math.sin(px * 127.1 + py * 311.7) * 43758.5453;
-      return h - Math.floor(h);
+      return (Math.sin(px * 127.1 + py * 311.7) * 43758.5453) % 1;
     }
-    function noise(x, y) {
+    function smoothNoise(x, y) {
       const ix = Math.floor(x), iy = Math.floor(y);
       const fx = x - ix, fy = y - iy;
       const ux = fx * fx * (3 - 2 * fx);
@@ -293,208 +283,361 @@
         hash(ix + 1, iy + 1) * ux * uy
       );
     }
-    // fractional brownian motion
-    function fbm(x, y, octaves) {
-      let v = 0, a = 0.5, f = 1;
-      for (let i = 0; i < octaves; i++) {
-        v += a * noise(x * f, y * f);
-        a *= 0.5; f *= 2.0;
-      }
-      return v;
-    }
-    // domain-warped fbm for organic marbling
-    function warpedFbm(x, y, time) {
-      const wx = fbm(x + time * 0.04, y + time * 0.03, 4);
-      const wy = fbm(x + time * 0.035 + 5.3, y + time * 0.045 + 3.7, 4);
-      // second warp layer for curl
-      const wx2 = fbm(x + wx * 2.5 + time * 0.02, y + wy * 2.5 + time * 0.025, 3);
-      const wy2 = fbm(x + wx * 2.0 + time * 0.018 + 7.1, y + wy * 2.0 + time * 0.022 + 2.3, 3);
-      return fbm(x + wx2 * 1.8, y + wy2 * 1.8, 5);
+    function fluidNoise(x, y, scale, time) {
+      const s = scale;
+      return smoothNoise(x * s + time * 0.018, y * s + time * 0.014) * 0.5 +
+             smoothNoise(x * s * 2.1 + time * 0.022, y * s * 2.1 + time * 0.018) * 0.3 +
+             smoothNoise(x * s * 4.3 + time * 0.028, y * s * 4.3 + time * 0.024) * 0.2;
     }
     
-    // ─── Inject density at flowing sources ───
-    function injectDensity() {
-      const dw = densityCanvas.width;
-      const dh = densityCanvas.height;
+    // ─── Grid index helpers ───
+    function IX(x, y) { return y * gw + x; }
+    
+    // ─── Initialize fluid grids ───
+    function initFluid() {
+      gw = Math.ceil(W / GRID);
+      gh = Math.ceil(H / GRID);
+      const N = gw * gh;
       
-      const numSources = 3;
+      vx  = new Float32Array(N);
+      vy  = new Float32Array(N);
+      vx0 = new Float32Array(N);
+      vy0 = new Float32Array(N);
+      vxTemp = new Float32Array(N);
+      vyTemp = new Float32Array(N);
+      
+      density     = new Float32Array(N);
+      densityTemp = new Float32Array(N);
+      
+      pressure      = new Float32Array(N);
+      pressureTemp  = new Float32Array(N);
+      divField      = new Float32Array(N);
+      
+      // Seed with ambient noise-driven flow + initial ink blobs
+      for (let y = 0; y < gh; y++) {
+        for (let x = 0; x < gw; x++) {
+          const i = IX(x, y);
+          const nx = (x / gw) * 4;
+          const ny = (y / gh) * 4;
+          
+          // gentle divergent-free base flow
+          const angle = fluidNoise(nx, ny, 1.0, t) * Math.PI * 2;
+          vx[i]  = Math.cos(angle) * 0.12;
+          vy[i]  = Math.sin(angle) * 0.12;
+          
+          // seed some ink concentration
+          density[i] = fluidNoise(nx * 1.5, ny * 1.5, 0.8, t * 0.5) * 0.35;
+          if (density[i] < 0.15) density[i] = 0;
+        }
+      }
+    }
+    
+    // ─── Inject ink from drifting sources ───
+    function injectInk() {
+      const numSources = 4;
       for (let s = 0; s < numSources; s++) {
-        const phase = t * 0.06 + s * 2.1;
-        const sx = (Math.sin(phase * 0.7 + s) * 0.5 + 0.5) * dw;
-        const sy = (Math.cos(phase * 0.5 + s * 1.3) * 0.5 + 0.5) * dh;
+        const phase = t * 0.04 + s * 1.618;
+        const sx = (Math.sin(phase * 0.6 + s) * 0.5 + 0.5) * gw;
+        const sy = (Math.cos(phase * 0.45 + s * 1.3) * 0.5 + 0.5) * gh;
+        const radius = 4 + Math.floor(6 * (0.5 + 0.5 * Math.sin(t * 0.07 + s * 2.4)));
+        const amount = 0.08 + 0.1 * (0.5 + 0.5 * Math.sin(t * 0.1 + s * 1.9));
         
-        // flowing direction from curl of warped field
-        const worldX = (sx / dw) * 3.0;
-        const worldY = (sy / dh) * 3.0;
-        const wVal = warpedFbm(worldX, worldY, t);
-        const angle = wVal * Math.PI * 4;
-        
-        const spread = 8 + Math.floor(12 * (0.5 + 0.5 * Math.sin(t * 0.08 + s)));
-        
-        for (let dy = -spread; dy <= spread; dy++) {
-          for (let dx = -spread; dx <= spread; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > spread) continue;
-            
-            const nx = Math.round(sx + dx);
-            const ny = Math.round(sy + dy);
-            if (nx < 0 || nx >= dw || ny < 0 || ny >= dh) continue;
-            
-            // inject along flow direction, elongated
-            const along = dx * Math.cos(angle) + dy * Math.sin(angle);
-            const cross = Math.abs(dx * Math.sin(angle) - dy * Math.cos(angle));
-            if (along < -spread * 0.8) continue;
-            if (cross > spread * 0.4) continue;
-            
-            const falloff = Math.pow(Math.max(0, 1 - dist / spread), 2);
-            const amount = falloff * (0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * 0.12 + s * 1.7)));
-            
-            const px = densityCtx.getImageData(nx, ny, 1, 1).data;
-            const newAlpha = Math.min(0.9, px[3] / 255 + amount * 0.08);
-            densityCtx.putImageData(
-              densityCtx.createImageData(1, 1),
-              nx, ny
-            );
-            densityCtx.fillStyle = `rgba(0,0,0,${newAlpha})`;
-            densityCtx.fillRect(nx, ny, 1, 1);
+            if (dist > radius) continue;
+            const xi = Math.round(sx + dx);
+            const yi = Math.round(sy + dy);
+            if (xi < 1 || xi >= gw - 1 || yi < 1 || yi >= gh - 1) continue;
+            const falloff = Math.pow(Math.max(0, 1 - dist / radius), 2);
+            density[IX(xi, yi)] = Math.min(1, density[IX(xi, yi)] + amount * falloff);
           }
         }
       }
     }
     
-    // ─── Advect existing density via curl field ───
-    function advectDensity() {
-      const dw = densityCanvas.width;
-      const dh = densityCanvas.height;
-      const src = densityCtx.getImageData(0, 0, dw, dh).data;
-      const dst = densityCtx.createImageData(dw, dh);
-      const dd = dst.data;
-      
-      for (let py = 0; py < dh; py++) {
-        for (let px = 0; px < dw; px++) {
-          const idx = (py * dw + px) * 4;
+    // ─── Semi-Lagrangian advection ───
+    function advect(field, fieldTemp, vxF, vyF, dt, dissipation) {
+      for (let y = 1; y < gh - 1; y++) {
+        for (let x = 1; x < gw - 1; x++) {
+          const i = IX(x, y);
+          const px = x - vxF[i] * dt * GRID;
+          const py = y - vyF[i] * dt * GRID;
           
-          // curl at this pixel
-          const scale = 0.004;
-          const eps = 1.0;
-          const n0 = warpedFbm((px + eps) * scale, py * scale, t);
-          const n1 = warpedFbm((px - eps) * scale, py * scale, t);
-          const n2 = warpedFbm(px * scale, (py + eps) * scale, t);
-          const n3 = warpedFbm(px * scale, (py - eps) * scale, t);
-          const curlX = (n0 - n1) / (2 * eps);
-          const curlY = (n2 - n3) / (2 * eps);
+          const x0 = Math.max(0, Math.min(gw - 2, Math.floor(px)));
+          const y0 = Math.max(0, Math.min(gh - 2, Math.floor(py)));
+          const x1 = x0 + 1, y1 = y0 + 1;
+          const fx = px - x0, fy = py - y0;
           
-          const advX = px - curlX * 0.8;
-          const advY = py - curlY * 0.8;
+          const i00 = IX(x0, y0), i10 = IX(x1, y0);
+          const i01 = IX(x0, y1), i11 = IX(x1, y1);
           
-          const srcX = Math.max(0, Math.min(dw - 1, Math.round(advX)));
-          const srcY = Math.max(0, Math.min(dh - 1, Math.round(advY)));
-          const sidx = (srcY * dw + srcX) * 4;
+          const v00 = field[i00] * (1 - fx) * (1 - fy);
+          const v10 = field[i10] * fx * (1 - fy);
+          const v01 = field[i01] * (1 - fx) * fy;
+          const v11 = field[i11] * fx * fy;
           
-          const srcA = src[sidx + 3] / 255;
-          const newA = srcA * 0.992; // slow dissipation
-          
-          dd[idx] = 0;
-          dd[idx + 1] = 0;
-          dd[idx + 2] = 0;
-          dd[idx + 3] = Math.round(newA * 255);
+          fieldTemp[i] = (v00 + v10 + v01 + v11) * dissipation;
         }
       }
-      
-      densityCtx.putImageData(dst, 0, 0);
     }
     
-    // ─── Mouse ripple ───
-    let mouseRipples = [];
-    canvas.addEventListener('click', (e) => {
-      const dw = densityCanvas.width;
-      const dh = densityCanvas.height;
-      mouseRipples.push({
-        x: (e.clientX / W) * dw,
-        y: (e.clientY / H) * dh,
-        r: 0,
-        maxR: (W / DENSITY_SCALE) * 0.6,
-        t: t,
-      });
-    });
+    // ─── Divergence ───
+    function computeDivergence() {
+      for (let y = 1; y < gh - 1; y++) {
+        for (let x = 1; x < gw - 1; x++) {
+          const i = IX(x, y);
+          divField[i] = (
+            (vx[IX(x + 1, y)] - vx[IX(x - 1, y)]) +
+            (vy[IX(x, y + 1)] - vy[IX(x, y - 1)])
+          ) * 0.5;
+        }
+      }
+    }
     
-    function applyMouseRipples() {
-      for (let i = mouseRipples.length - 1; i >= 0; i--) {
-        const rp = mouseRipples[i];
-        const age = t - rp.t;
-        if (age > 3.5) { mouseRipples.splice(i, 1); continue; }
-        
-        const progress = age / 3.5;
-        rp.r = rp.maxR * (1 - Math.pow(1 - progress, 2));
-        const rippleA = (1 - progress) * 0.5;
-        const thickness = 6 + progress * 8;
-        
-        // draw ring into density
-        const dr = densityCtx.getImageData(0, 0, densityCanvas.width, densityCanvas.height).data;
-        const di = densityCtx.createImageData(densityCanvas.width, densityCanvas.height);
-        di.data.set(dr);
-        const dd = di.data;
-        
-        const dw = densityCanvas.width;
-        const dh = densityCanvas.height;
-        
-        for (let py = 0; py < dh; py++) {
-          for (let px = 0; px < dw; px++) {
-            const dist = Math.sqrt((px - rp.x) ** 2 + (py - rp.y) ** 2);
-            const ringDist = Math.abs(dist - rp.r);
-            if (ringDist < thickness) {
-              const ringA = (1 - ringDist / thickness) * rippleA;
-              const idx = (py * dw + px) * 4;
-              const existingA = dd[idx + 3] / 255;
-              dd[idx + 3] = Math.min(255, Math.round((existingA + ringA * 0.3) * 255));
-            }
+    // ─── Pressure solve (Jacobi iteration) ───
+    function solvePressure(iterations) {
+      for (let iter = 0; iter < iterations; iter++) {
+        for (let y = 1; y < gh - 1; y++) {
+          for (let x = 1; x < gw - 1; x++) {
+            const i = IX(x, y);
+            pressureTemp[i] = (
+              divField[i] +
+              pressure[IX(x + 1, y)] +
+              pressure[IX(x - 1, y)] +
+              pressure[IX(x, y + 1)] +
+              pressure[IX(x, y - 1)]
+            ) * 0.25;
           }
         }
-        densityCtx.putImageData(di, 0, 0);
+        // swap
+        const tmp = pressure;
+        pressure = pressureTemp;
+        pressureTemp = tmp;
       }
     }
     
-    function renderDensity() {
-      const dw = densityCanvas.width;
-      const dh = densityCanvas.height;
+    // ─── Gradient subtraction (project to divergence-free) ───
+    function subtractPressure() {
+      for (let y = 1; y < gh - 1; y++) {
+        for (let x = 1; x < gw - 1; x++) {
+          const i = IX(x, y);
+          vx[i] -= (pressure[IX(x + 1, y)] - pressure[IX(x - 1, y)]) * 0.5;
+          vy[i] -= (pressure[IX(x, y + 1)] - pressure[IX(x, y - 1)]) * 0.5;
+        }
+      }
+    }
+    
+    // ─── Apply boundary conditions ───
+    function applyBoundaryConditions() {
+      for (let x = 0; x < gw; x++) {
+        vx[IX(x, 0)]       = 0; vy[IX(x, 0)]       = 0;
+        vx[IX(x, gh - 1)]  = 0; vy[IX(x, gh - 1)]  = 0;
+        density[IX(x, 0)]  = 0; density[IX(x, gh - 1)] = 0;
+      }
+      for (let y = 0; y < gh; y++) {
+        vx[IX(0, y)]       = 0; vy[IX(0, y)]       = 0;
+        vx[IX(gw - 1, y)]  = 0; vy[IX(gw - 1, y)]  = 0;
+        density[IX(0, y)]  = 0; density[IX(gw - 1, y)] = 0;
+      }
+    }
+    
+    // ─── Mouse / cursor forces ───
+    function applyCursorForces() {
+      if (Math.abs(mouseX - lastMouseX) < 0.5 && Math.abs(mouseY - lastMouseY) < 0.5) {
+        cursorAge = Math.min(cursorAge + 1, 30);
+        return;
+      }
+      cursorAge = 0;
       
-      // clear main canvas with warm white
+      const gmx = mouseX / GRID;
+      const gmy = mouseY / GRID;
+      const dx = mouseX - lastMouseX;
+      const dy = mouseY - lastMouseY;
+      const speed = Math.sqrt(dx * dx + dy * dy);
+      const radius = 10;
+      
+      // Apply velocity impulse + density ripple at cursor
+      for (let y = -radius; y <= radius; y++) {
+        for (let x = -radius; x <= radius; x++) {
+          const dist = Math.sqrt(x * x + y * y);
+          if (dist > radius) continue;
+          const falloff = Math.pow(Math.max(0, 1 - dist / radius), 2);
+          const xi = Math.round(gmx + x);
+          const yi = Math.round(gmy + y);
+          if (xi < 1 || xi >= gw - 1 || yi < 1 || yi >= gh - 1) continue;
+          
+          const i = IX(xi, yi);
+          // velocity impulse — moves the fluid
+          vx[i] += dx * 0.08 * falloff;
+          vy[i] += dy * 0.08 * falloff;
+          
+          // soft density disturbance — ripple in the ink
+          const ripple = Math.sin(dist / radius * Math.PI) * 0.04;
+          density[i] = Math.max(0, density[i] - ripple * 0.5);
+        }
+      }
+      
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
+    }
+    
+    // ─── Ambient flow drive (prevents total stillness) ───
+    function addAmbientFlow() {
+      for (let y = 1; y < gh - 1; y += 3) {
+        for (let x = 1; x < gw - 1; x += 3) {
+          const i = IX(x, y);
+          const nx = (x / gw) * 4;
+          const ny = (y / gh) * 4;
+          const noiseAngle = fluidNoise(nx, ny, 1.0, t) * Math.PI * 2;
+          vx[i] += Math.cos(noiseAngle) * 0.003;
+          vy[i] += Math.sin(noiseAngle) * 0.003;
+        }
+      }
+    }
+    
+    // ─── Diffuse velocity (viscosity) ───
+    function diffuseVelocity() {
+      const visc = 0.995;
+      for (let y = 2; y < gh - 2; y++) {
+        for (let x = 2; x < gw - 2; x++) {
+          const i = IX(x, y);
+          vxTemp[i] = vx[i] + (
+            (vx[IX(x - 1, y)] + vx[IX(x + 1, y)] +
+             vx[IX(x, y - 1)] + vx[IX(x, y + 1)] +
+             vx[IX(x - 1, y - 1)] + vx[IX(x + 1, y - 1)] +
+             vx[IX(x - 1, y + 1)] + vx[IX(x + 1, y + 1)]) * 0.125 -
+            vx[i]
+          ) * 0.002;
+          vyTemp[i] = vy[i] + (
+            (vy[IX(x - 1, y)] + vy[IX(x + 1, y)] +
+             vy[IX(x, y - 1)] + vy[IX(x, y + 1)] +
+             vy[IX(x - 1, y - 1)] + vy[IX(x + 1, y - 1)] +
+             vy[IX(x - 1, y + 1)] + vy[IX(x + 1, y + 1)]) * 0.125 -
+            vy[i]
+          ) * 0.002;
+        }
+      }
+      for (let i = 0; i < gw * gh; i++) {
+        vx[i] *= visc;
+        vy[i] *= visc;
+      }
+    }
+    
+    // ─── Render density as ink ───
+    function renderInk() {
+      // Start with warm white
       ctx.fillStyle = '#FAFAF8';
       ctx.fillRect(0, 0, W, H);
       
-      // draw low-res density upscaled with smoothing
-      ctx.save();
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(densityCanvas, 0, 0, W, H);
-      ctx.restore();
+      const imgData = ctx.createImageData(W, H);
+      const img = imgData.data;
       
-      // composite the density with multiply/blend mode for natural ink feel
-      ctx.save();
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.globalAlpha = 0.85;
-      ctx.fillStyle = '#1a1a22';
-      ctx.fillRect(0, 0, W, H);
-      ctx.restore();
+      for (let py = 0; py < H; py++) {
+        for (let px = 0; px < W; px++) {
+          const gx = Math.min(gw - 2, Math.floor(px / GRID));
+          const gy = Math.min(gh - 2, Math.floor(py / GRID));
+          const d = density[IX(gx, gy)];
+          
+          const idx = (py * W + px) * 4;
+          
+          if (d < 0.005) {
+            // near-transparent — show white background
+            img[idx]     = 250;
+            img[idx + 1] = 250;
+            img[idx + 2] = 248;
+            img[idx + 3] = 255;
+          } else {
+            // ink: interpolate from dark charcoal to deep black
+            const darkR = 10, darkG = 10, darkB = 14;
+            const midR = 28, midG = 28, midB = 34;
+            const lightR = 55, lightG = 55, lightB = 65;
+            
+            let r, g, b;
+            if (d < 0.35) {
+              // light wash — very transparent gray
+              const f = d / 0.35;
+              r = lightR + (midR - lightR) * f;
+              g = lightG + (midG - lightG) * f;
+              b = lightB + (midB - lightB) * f;
+            } else if (d < 0.7) {
+              // mid tone
+              const f = (d - 0.35) / 0.35;
+              r = midR + (darkR - midR) * f;
+              g = midG + (darkG - midG) * f;
+              b = midB + (darkB - midB) * f;
+            } else {
+              // dense — rich black
+              const f = Math.min(1, (d - 0.7) / 0.3);
+              r = darkR + (3 - darkR) * f;
+              g = darkG + (3 - darkG) * f;
+              b = darkB + (4 - darkB) * f;
+            }
+            
+            // blend over warm white background
+            const alpha = Math.pow(d, 0.75); // gamma-like for more natural ink look
+            img[idx]     = Math.round(250 * (1 - alpha) + r * alpha);
+            img[idx + 1] = Math.round(250 * (1 - alpha) + g * alpha);
+            img[idx + 2] = Math.round(248 * (1 - alpha) + b * alpha);
+            img[idx + 3] = 255;
+          }
+        }
+      }
+      
+      ctx.putImageData(imgData, 0, 0);
     }
     
-    function draw() {
+    // ─── Main loop ───
+    function step() {
       const now = performance.now();
-      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      const dt = Math.min((now - lastTime) / 1000, 0.033);
       lastTime = now;
       t += dt;
       
-      injectDensity();
-      advectDensity();
-      applyMouseRipples();
-      renderDensity();
+      applyCursorForces();
+      addAmbientFlow();
+      injectInk();
+      diffuseVelocity();
       
-      requestAnimationFrame(draw);
+      // Semi-Lagrangian advection of velocity
+      advect(vx, vxTemp, vx, vy, dt, 0.998);
+      advect(vy, vyTemp, vx, vy, dt, 0.998);
+      
+      // Semi-Lagrangian advection of density (ink)
+      advect(density, densityTemp, vx, vy, dt, 0.9975);
+      
+      // Enforce incompressibility
+      computeDivergence();
+      solvePressure(20);
+      subtractPressure();
+      
+      applyBoundaryConditions();
+      
+      renderInk();
+      requestAnimationFrame(step);
     }
     
-    window.addEventListener('resize', resize);
-    resize();
-    requestAnimationFrame(draw);
+    // ─── Input handlers ───
+    window.addEventListener('resize', () => {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      initFluid();
+    });
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+    window.addEventListener('mousedown', () => { mouseDown = true; });
+    window.addEventListener('mouseup',   () => { mouseDown = false; });
+    window.addEventListener('mouseleave', () => {
+      mouseX = -9999; mouseY = -9999;
+      lastMouseX = -9999; lastMouseY = -9999;
+    });
+    
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    initFluid();
+    requestAnimationFrame(step);
   </script>
 </body>
 </html>
