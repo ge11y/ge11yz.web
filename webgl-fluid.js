@@ -1329,6 +1329,20 @@ function runSimulation(config) {
       if (p.moved) {
         p.moved = false;
         splatPointer(p);
+
+        // Repel: inject negative splats in a ring around cursor
+        // to push existing color oil away from the cursor path
+        let repelRadius = 0.035;
+        let repelCount = 8;
+        for (let i = 0; i < repelCount; i++) {
+          let angle = (i / repelCount) * Math.PI * 2;
+          // Direction from cursor center outward
+          let fdx = Math.cos(angle) * 800;
+          let fdy = Math.sin(angle) * 800;
+          let rx = p.texcoordX + Math.cos(angle) * repelRadius;
+          let ry = p.texcoordY + Math.sin(angle) * repelRadius;
+          splat(rx, ry, fdx, fdy, { r: 0, g: 0, b: 0 });
+        }
       }
     });
   }
@@ -1720,7 +1734,7 @@ function runSimulation(config) {
     let dy = pointer.texcoordY - pointer.prevTexcoordY;
 
     // Circular swirl: add perpendicular component to create swirling motion
-    let swirlStrength = 2.2;
+    let swirlStrength = 0.4; // reduced — less spin, more push
     let perpDx = -dy * swirlStrength;
     let perpDy = dx * swirlStrength;
     dx += perpDx;
