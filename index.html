@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="fluid-overlay-styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗</text></svg>">
   <style>
-    /* ── Flip card overrides for ge11yz ── */
+    /* ── Projects flip cards (pastel on dark) ── */
     .flip-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -76,14 +76,13 @@
     }
     .flip-tagline {
       font-size: 12px;
-      color: #aaa;
       margin-bottom: auto;
       padding-top: 6px;
-      opacity: 0.7;
+      opacity: 0.65;
     }
     .flip-front-desc {
       font-size: 12px;
-      color: #888;
+      color: #bbb;
       line-height: 1.6;
       margin-bottom: 20px;
     }
@@ -110,7 +109,6 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #ccc;
     }
     .flip-back-btn {
       font-size: 10px;
@@ -139,11 +137,10 @@
       align-items: flex-start;
       gap: 7px;
       font-size: 11px;
-      color: #777;
+      color: #bbb;
       line-height: 1.5;
     }
     .flip-note-dot {
-      color: #888;
       font-size: 9px;
       margin-top: 2px;
       flex-shrink: 0;
@@ -158,7 +155,7 @@
     .flip-visit-btn {
       font-size: 11px;
       font-weight: 600;
-      background: #fff;
+      background: var(--accent);
       color: #000;
       border: none;
       padding: 6px 16px;
@@ -175,7 +172,7 @@
     }
     .flip-card-label {
       font-size: 9px;
-      color: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.2);
       text-transform: uppercase;
       letter-spacing: 0.1em;
     }
@@ -219,20 +216,18 @@
 
   <script src="webgl-fluid.js"></script>
   <script>
-    // ── Projects data ──────────────────────────────────────────────────────────
     var projects = [
       {
         name: 'ogbe.art',
         tagline: 'Bitcoin Ordinal Art Portfolio',
         url: 'https://ogbe.art',
         accent: '#c8a8e8',
-        accentHex: 200, // r
         desc: 'A curated portfolio showcasing Ordinal inscriptions across multiple collections. Features a WebGL fluid simulation background with a minimalist black card layout.',
         notes: [
-          'WebGL fluid background — click logo to burst color',
+          'WebGL fluid background — click logo for color burst',
           'Collections: EEGUN (111 pcs), IRO, TitWifNip, FLUX, For The Birds, INDICOLITE, and more',
           'Piece viewer with arrow nav, zoom, and pan across all collections',
-          'Fonts enlarged — collection names at 18px, white text + gold glow on hover',
+          'Fonts enlarged — collection names at 18px, white text with gold glow on hover',
         ],
       },
       {
@@ -242,11 +237,11 @@
         accent: '#a8e8c8',
         desc: 'A 3D thought-mapping app where users type realizations and watch them form a neural network. AI surfaces patterns, values, and turning points over time.',
         notes: [
-          'WebGL graceful fallback added — 2D mode on WebGL failure',
-          'Demo content labeled &quot;— Sample content —&quot; with dashed border',
-          'Save button shows &quot;Saved ✓&quot; for 3s after account creation',
+          'WebGL graceful fallback added — 2D mode when WebGL fails',
+          'Demo content labeled &quot;— Sample content —&quot; with dashed border container',
+          'Save button shows &quot;Saved ✓&quot; for 3 seconds after account creation',
           '&quot;Clear canvas&quot; button added to header with confirm dialog',
-          '&quot;Skip&quot; &amp; &quot;Sign in&quot; button contrast fixed',
+          '&quot;Skip&quot; and &quot;Sign in&quot; button contrast increased',
           '&quot;How it works&quot; card text overlap fixed',
         ],
       },
@@ -259,7 +254,7 @@
         notes: [
           'Assess button confirmed working (client-side mock valuation)',
           'Pricing section: &quot;Free during early access&quot; added',
-          'Email waitlist / invite auth flow added',
+          'Email waitlist and invite auth flow added',
           'Low-contrast placeholder text fixed',
         ],
       },
@@ -271,20 +266,20 @@
         desc: 'AI sales coaching for pest control companies. Helps sales teams practice calls, sharpen objections, and close more jobs.',
         notes: [
           'AI roleplay partner for pest control sales teams',
-          'Voice and text coaching modes',
-          'Objection handling and closing techniques',
+          'Voice and text coaching modes available',
+          'Objection handling and closing techniques library',
         ],
       },
       {
         name: 'SWARM',
-        tagline: 'Autonomous AI Swarm',
+        tagline: 'Autonomous AI Swarm Builder',
         url: 'https://ge11y.github.io/swarm/',
         accent: '#e8a8b8',
         desc: 'Autonomous AI swarm build system — multiple AI agents coordinating to plan, build, and ship complete projects without human intervention.',
         notes: [
-          'Multi-agent orchestration system',
+          'Multi-agent orchestration for project building',
           'Agents coordinate on planning, coding, testing, and deployment',
-          'Built as a ge11yz internal build tool',
+          'Built as an internal build tool for ge11yz',
         ],
       },
       {
@@ -294,9 +289,9 @@
         accent: '#a8e8e8',
         desc: 'Internal collaboration dashboard for managing inbound requests, project status, and team scheduling.',
         notes: [
-          'Request submission form for project ideas',
-          'Schedule / time-slot scheduler',
-          'Minimalist tan + black aesthetic',
+          'Request submission form for project ideas and status tracking',
+          'Schedule and time-slot scheduler for the team',
+          'Minimalist eggshell tan and black aesthetic',
         ],
       },
       {
@@ -304,10 +299,10 @@
         tagline: 'Bitcoin NFT Collection',
         url: 'https://ge11y.github.io/ORDIMUTANTSDB/',
         accent: '#c8e8a8',
-        desc: 'Bitcoin NFT collection on the Ordinals protocol.',
+        desc: 'Bitcoin NFT collection on the Ordinals protocol. Full on-chain metadata and trait data.',
         notes: [
-          'Ordinal inscription collection',
-          'Full on-chain metadata and traits',
+          'Ordinal inscription collection with on-chain traits',
+          'Complete metadata and rarity data included',
         ],
       },
       {
@@ -315,50 +310,45 @@
         tagline: 'Wellness Platform',
         url: 'https://ge11y.github.io/CORE-INTEGRATIVE/',
         accent: '#e8d8a8',
-        desc: 'Holistic wellness and whole-person care platform.',
+        desc: 'Holistic wellness and whole-person care platform connecting practitioners with patients.',
         notes: [
           'Integrative health resources and practitioner directory',
-          'Whole-person care approach',
+          'Whole-person care approach with multiple modalities',
         ],
       },
     ];
 
-    // ── Render flip cards ─────────────────────────────────────────────────────
     var flipGrid = document.getElementById('flipGrid');
     if (flipGrid) {
       var html = '';
       projects.forEach(function(p, i) {
-        // Parse accent hex for glow
         var glowStyle = 'background:radial-gradient(ellipse at 30% 20%, ' + p.accent + ' 0%, transparent 60%)';
-        var noteAccent = p.accent;
         html += ''
           + '<div class="flip-card" id="flipCard' + i + '" onclick="flipCard(' + i + ')">'
           + '  <div class="flip-card-inner">'
-          // Front
           + '    <div class="flip-card-front">'
           + '      <div class="flip-glow" style="' + glowStyle + '"></div>'
           + '      <div class="flip-front-content">'
-          + '        <div class="flip-site-name">' + p.name + '</div>'
-          + '        <div class="flip-tagline">' + p.tagline + '</div>'
+          + '        <div class="flip-site-name" style="color:#fff">' + p.name + '</div>'
+          + '        <div class="flip-tagline" style="color:' + p.accent + '">' + p.tagline + '</div>'
           + '        <div class="flip-front-desc">' + p.desc + '</div>'
           + '        <div class="flip-front-hint">tap to see details &#8594;</div>'
           + '      </div>'
           + '    </div>'
-          // Back
           + '    <div class="flip-card-back">'
           + '      <div class="flip-back-content">'
           + '        <div class="flip-back-header">'
-          + '          <div class="flip-back-title">Summary</div>'
+          + '          <div class="flip-back-title" style="color:' + p.accent + '">Summary</div>'
           + '          <button class="flip-back-btn" onclick="event.stopPropagation(); flipCard(' + i + ')">&#8592; Back</button>'
           + '        </div>'
           + '        <div class="flip-notes">';
         p.notes.forEach(function(note) {
-          html += '          <div class="flip-note"><span class="flip-note-dot">&#8226;</span><span>' + note + '</span></div>';
+          html += '          <div class="flip-note"><span class="flip-note-dot" style="color:' + p.accent + '">&#8226;</span><span>' + note + '</span></div>';
         });
         html += '        </div>'
           + '        <div class="flip-back-footer">'
           + '          <div class="flip-card-label">ge11yz ecosystem</div>'
-          + '          <a href="' + p.url + '" class="flip-visit-btn" onclick="event.stopPropagation()">Visit &#8594;</a>'
+          + '          <a href="' + p.url + '" class="flip-visit-btn" style="background:' + p.accent + '" onclick="event.stopPropagation()">Visit &#8594;</a>'
           + '        </div>'
           + '      </div>'
           + '    </div>'
@@ -370,11 +360,10 @@
 
     function flipCard(i) {
       var card = document.getElementById('flipCard' + i);
-      if (!card) return;
-      card.classList.toggle('flipped');
+      if (card) card.classList.toggle('flipped');
     }
 
-    // ── Logo color burst ───────────────────────────────────────────────────────
+    // Logo color burst
     var palettes = [
       { SPLAT_HUE: 0.14, name: 'amber' },
       { SPLAT_HUE: 0.58, name: 'teal' },
@@ -389,15 +378,11 @@
 
     function colorBurst() {
       for (var i = 0; i < 6; i++) {
-        setTimeout(function(i) {
-          var hue = (config.SPLAT_HUE + i * 0.12) % 1.0;
+        setTimeout(function(idx) {
+          var hue = (config.SPLAT_HUE + idx * 0.12) % 1.0;
           var c = HSVtoRGB(hue, 0.9, 0.85);
           c.r *= 1.5; c.g *= 1.5; c.b *= 1.5;
-          var x = 0.3 + Math.random() * 0.4;
-          var y = 0.3 + Math.random() * 0.4;
-          var dx = (Math.random() - 0.5) * 10000;
-          var dy = (Math.random() - 0.5) * 10000;
-          splat(x, y, dx, dy, c);
+          splat(0.3 + Math.random() * 0.4, 0.3 + Math.random() * 0.4, (Math.random() - 0.5) * 10000, (Math.random() - 0.5) * 10000, c);
         }.bind(null, i), i * 40);
       }
     }
@@ -407,17 +392,13 @@
 
     logo.addEventListener('click', function() {
       paletteIndex = (paletteIndex + 1) % palettes.length;
-      var p = palettes[paletteIndex];
-      config.SPLAT_HUE = p.SPLAT_HUE;
-
+      config.SPLAT_HUE = palettes[paletteIndex].SPLAT_HUE;
       logo.classList.remove('pulse');
       void logo.offsetWidth;
       logo.classList.add('pulse');
-
       flash.classList.remove('active');
       void flash.offsetWidth;
       flash.classList.add('active');
-
       colorBurst();
     });
   </script>
