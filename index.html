@@ -9,6 +9,177 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="fluid-overlay-styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗</text></svg>">
+  <style>
+    /* ── Flip card overrides for ge11yz ── */
+    .flip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .flip-card {
+      height: 320px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-card-front,
+    .flip-card-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+    }
+    .flip-card-front {
+      background: rgba(10, 10, 10, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    .flip-card-back {
+      background: rgba(12, 12, 12, 0.95);
+      border: 1px solid rgba(255,255,255,0.12);
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+    }
+    .flip-glow {
+      position: absolute;
+      inset: 0;
+      opacity: 0.05;
+      pointer-events: none;
+    }
+    .flip-front-content {
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .flip-site-name {
+      font-size: 18px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+    .flip-tagline {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: auto;
+      padding-top: 6px;
+      opacity: 0.7;
+    }
+    .flip-front-desc {
+      font-size: 12px;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .flip-front-hint {
+      font-size: 10px;
+      color: rgba(255,255,255,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .flip-back-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .flip-back-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .flip-back-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #ccc;
+    }
+    .flip-back-btn {
+      font-size: 10px;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: rgba(255,255,255,0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .flip-back-btn:hover {
+      color: rgba(255,255,255,0.6);
+    }
+    .flip-notes {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 14px;
+      padding-right: 2px;
+    }
+    .flip-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 11px;
+      color: #777;
+      line-height: 1.5;
+    }
+    .flip-note-dot {
+      color: #888;
+      font-size: 9px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .flip-back-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .flip-visit-btn {
+      font-size: 11px;
+      font-weight: 600;
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+      transition: opacity 0.2s, transform 0.2s;
+      display: inline-block;
+    }
+    .flip-visit-btn:hover {
+      opacity: 0.85;
+      transform: scale(1.03);
+    }
+    .flip-card-label {
+      font-size: 9px;
+      color: rgba(255,255,255,0.15);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+  </style>
 </head>
 <body>
   <canvas></canvas>
@@ -26,71 +197,14 @@
 
     <section class="hero">
       <h1 class="hero-title">Ideas in motion,<br><em>projects in form.</em></h1>
-      <p class="hero-sub">A collection of experiments, tools, and explorations at the intersection of technology and design.</p>
+      <p class="hero-sub">A collection of experiments, tools, and explorations at the intersection of technology and design. Click any card to see what's under the hood.</p>
     </section>
 
     <div class="divider"><hr></div>
 
     <section class="projects-section">
       <p class="section-label">Projects</p>
-      <ul class="projects-list">
-        <li class="project-item">
-          <a href="https://ge11y.github.io/ORDIMUTANTSDB/" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">OrdiMutants</span>
-            <span class="project-desc">Bitcoin NFT Collection</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://ge11y.github.io/CORE-INTEGRATIVE/" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">KORE Integrative Health</span>
-            <span class="project-desc">Holistic wellness & whole-person care</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://ge11y.github.io/team-portal/" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">Team Portal</span>
-            <span class="project-desc">Collaboration & scheduling hub</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://askge11y.com" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">Ask Gelly</span>
-            <span class="project-desc">AI sales coaching for pest control</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://t0ph.art" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">t0ph.art</span>
-            <span class="project-desc">Digital artist — skulls & drip on-chain</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://ogbe.art" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">ogbe.art</span>
-            <span class="project-desc">Bitcoin ordinal artist</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://ge11y.github.io/aisess-valuation-tool/" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">AISESS</span>
-            <span class="project-desc">AI site valuation & assessment</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-        <li class="project-item">
-          <a href="https://ge11y.github.io/swarm/" class="project-link" target="_blank" rel="noopener">
-            <span class="project-name">SWARM</span>
-            <span class="project-desc">Autonomous AI swarm build system</span>
-            <span class="project-arrow">→</span>
-          </a>
-        </li>
-      </ul>
+      <div class="flip-grid" id="flipGrid"></div>
     </section>
 
     <div class="divider"><hr></div>
@@ -105,59 +219,205 @@
 
   <script src="webgl-fluid.js"></script>
   <script>
-    // Color palette for the easter egg
-    const palettes = [
-      { SPLAT_HUE: 0.14, name: 'amber' },           // goldenrod warm
-      { SPLAT_HUE: 0.58, name: 'teal' },            // teal ocean
-      { SPLAT_HUE: 0.72, name: 'violet' },          // violet
-      { SPLAT_HUE: 0.02, name: 'crimson' },         // deep red
-      { SPLAT_HUE: 0.50, name: 'cyan' },            // electric blue
-      { SPLAT_HUE: 0.82, name: 'rose' },            // magenta rose
-      { SPLAT_HUE: 0.28, name: 'forest' },         // deep green
-      { SPLAT_HUE: 0.95, name: 'copper' },          // copper orange
+    // ── Projects data ──────────────────────────────────────────────────────────
+    var projects = [
+      {
+        name: 'ogbe.art',
+        tagline: 'Bitcoin Ordinal Art Portfolio',
+        url: 'https://ogbe.art',
+        accent: '#c8a8e8',
+        accentHex: 200, // r
+        desc: 'A curated portfolio showcasing Ordinal inscriptions across multiple collections. Features a WebGL fluid simulation background with a minimalist black card layout.',
+        notes: [
+          'WebGL fluid background — click logo to burst color',
+          'Collections: EEGUN (111 pcs), IRO, TitWifNip, FLUX, For The Birds, INDICOLITE, and more',
+          'Piece viewer with arrow nav, zoom, and pan across all collections',
+          'Fonts enlarged — collection names at 18px, white text + gold glow on hover',
+        ],
+      },
+      {
+        name: 'rea1yze.com',
+        tagline: 'AI Thought Mapping',
+        url: 'https://rea1yze.com',
+        accent: '#a8e8c8',
+        desc: 'A 3D thought-mapping app where users type realizations and watch them form a neural network. AI surfaces patterns, values, and turning points over time.',
+        notes: [
+          'WebGL graceful fallback added — 2D mode on WebGL failure',
+          'Demo content labeled &quot;— Sample content —&quot; with dashed border',
+          'Save button shows &quot;Saved ✓&quot; for 3s after account creation',
+          '&quot;Clear canvas&quot; button added to header with confirm dialog',
+          '&quot;Skip&quot; &amp; &quot;Sign in&quot; button contrast fixed',
+          '&quot;How it works&quot; card text overlap fixed',
+        ],
+      },
+      {
+        name: 'aisess.xyz',
+        tagline: 'AI URL Valuation Tool',
+        url: 'https://aisess.xyz',
+        accent: '#e8c8a8',
+        desc: 'A URL analysis and valuation tool that extracts domain age, traffic signals, and keyword data to generate an estimated domain value.',
+        notes: [
+          'Assess button confirmed working (client-side mock valuation)',
+          'Pricing section: &quot;Free during early access&quot; added',
+          'Email waitlist / invite auth flow added',
+          'Low-contrast placeholder text fixed',
+        ],
+      },
+      {
+        name: 'Ask Gelly',
+        tagline: 'AI Sales Coaching',
+        url: 'https://askge11y.com',
+        accent: '#a8c8e8',
+        desc: 'AI sales coaching for pest control companies. Helps sales teams practice calls, sharpen objections, and close more jobs.',
+        notes: [
+          'AI roleplay partner for pest control sales teams',
+          'Voice and text coaching modes',
+          'Objection handling and closing techniques',
+        ],
+      },
+      {
+        name: 'SWARM',
+        tagline: 'Autonomous AI Swarm',
+        url: 'https://ge11y.github.io/swarm/',
+        accent: '#e8a8b8',
+        desc: 'Autonomous AI swarm build system — multiple AI agents coordinating to plan, build, and ship complete projects without human intervention.',
+        notes: [
+          'Multi-agent orchestration system',
+          'Agents coordinate on planning, coding, testing, and deployment',
+          'Built as a ge11yz internal build tool',
+        ],
+      },
+      {
+        name: 'Team Portal',
+        tagline: 'Collaboration Hub',
+        url: 'https://ge11y.github.io/team-portal/',
+        accent: '#a8e8e8',
+        desc: 'Internal collaboration dashboard for managing inbound requests, project status, and team scheduling.',
+        notes: [
+          'Request submission form for project ideas',
+          'Schedule / time-slot scheduler',
+          'Minimalist tan + black aesthetic',
+        ],
+      },
+      {
+        name: 'OrdiMutants',
+        tagline: 'Bitcoin NFT Collection',
+        url: 'https://ge11y.github.io/ORDIMUTANTSDB/',
+        accent: '#c8e8a8',
+        desc: 'Bitcoin NFT collection on the Ordinals protocol.',
+        notes: [
+          'Ordinal inscription collection',
+          'Full on-chain metadata and traits',
+        ],
+      },
+      {
+        name: 'KORE Integrative Health',
+        tagline: 'Wellness Platform',
+        url: 'https://ge11y.github.io/CORE-INTEGRATIVE/',
+        accent: '#e8d8a8',
+        desc: 'Holistic wellness and whole-person care platform.',
+        notes: [
+          'Integrative health resources and practitioner directory',
+          'Whole-person care approach',
+        ],
+      },
     ];
-    let paletteIndex = 0;
-    let pulseCount = 0;
 
-    // Inject a large multi-color splat into the fluid
+    // ── Render flip cards ─────────────────────────────────────────────────────
+    var flipGrid = document.getElementById('flipGrid');
+    if (flipGrid) {
+      var html = '';
+      projects.forEach(function(p, i) {
+        // Parse accent hex for glow
+        var glowStyle = 'background:radial-gradient(ellipse at 30% 20%, ' + p.accent + ' 0%, transparent 60%)';
+        var noteAccent = p.accent;
+        html += ''
+          + '<div class="flip-card" id="flipCard' + i + '" onclick="flipCard(' + i + ')">'
+          + '  <div class="flip-card-inner">'
+          // Front
+          + '    <div class="flip-card-front">'
+          + '      <div class="flip-glow" style="' + glowStyle + '"></div>'
+          + '      <div class="flip-front-content">'
+          + '        <div class="flip-site-name">' + p.name + '</div>'
+          + '        <div class="flip-tagline">' + p.tagline + '</div>'
+          + '        <div class="flip-front-desc">' + p.desc + '</div>'
+          + '        <div class="flip-front-hint">tap to see details &#8594;</div>'
+          + '      </div>'
+          + '    </div>'
+          // Back
+          + '    <div class="flip-card-back">'
+          + '      <div class="flip-back-content">'
+          + '        <div class="flip-back-header">'
+          + '          <div class="flip-back-title">Summary</div>'
+          + '          <button class="flip-back-btn" onclick="event.stopPropagation(); flipCard(' + i + ')">&#8592; Back</button>'
+          + '        </div>'
+          + '        <div class="flip-notes">';
+        p.notes.forEach(function(note) {
+          html += '          <div class="flip-note"><span class="flip-note-dot">&#8226;</span><span>' + note + '</span></div>';
+        });
+        html += '        </div>'
+          + '        <div class="flip-back-footer">'
+          + '          <div class="flip-card-label">ge11yz ecosystem</div>'
+          + '          <a href="' + p.url + '" class="flip-visit-btn" onclick="event.stopPropagation()">Visit &#8594;</a>'
+          + '        </div>'
+          + '      </div>'
+          + '    </div>'
+          + '  </div>'
+          + '</div>';
+      });
+      flipGrid.innerHTML = html;
+    }
+
+    function flipCard(i) {
+      var card = document.getElementById('flipCard' + i);
+      if (!card) return;
+      card.classList.toggle('flipped');
+    }
+
+    // ── Logo color burst ───────────────────────────────────────────────────────
+    var palettes = [
+      { SPLAT_HUE: 0.14, name: 'amber' },
+      { SPLAT_HUE: 0.58, name: 'teal' },
+      { SPLAT_HUE: 0.72, name: 'violet' },
+      { SPLAT_HUE: 0.02, name: 'crimson' },
+      { SPLAT_HUE: 0.50, name: 'cyan' },
+      { SPLAT_HUE: 0.82, name: 'rose' },
+      { SPLAT_HUE: 0.28, name: 'forest' },
+      { SPLAT_HUE: 0.95, name: 'copper' },
+    ];
+    var paletteIndex = 0;
+
     function colorBurst() {
-      // Splat multiple times with different hues to create a burst
-      let count = 6;
-      for (let i = 0; i < count; i++) {
-        setTimeout(() => {
-          let hue = (config.SPLAT_HUE + i * 0.12) % 1.0;
-          let c = HSVtoRGB(hue, 0.9, 0.85);
+      for (var i = 0; i < 6; i++) {
+        setTimeout(function(i) {
+          var hue = (config.SPLAT_HUE + i * 0.12) % 1.0;
+          var c = HSVtoRGB(hue, 0.9, 0.85);
           c.r *= 1.5; c.g *= 1.5; c.b *= 1.5;
-          let x = 0.3 + Math.random() * 0.4;
-          let y = 0.3 + Math.random() * 0.4;
-          let dx = (Math.random() - 0.5) * 10000;
-          let dy = (Math.random() - 0.5) * 10000;
+          var x = 0.3 + Math.random() * 0.4;
+          var y = 0.3 + Math.random() * 0.4;
+          var dx = (Math.random() - 0.5) * 10000;
+          var dy = (Math.random() - 0.5) * 10000;
           splat(x, y, dx, dy, c);
-        }, i * 40);
+        }.bind(null, i), i * 40);
       }
     }
 
-    // Logo click — cycle color palette
-    const logo = document.getElementById('logo');
-    const flash = document.getElementById('screenFlash');
-    const configObj = window.config || { SPLAT_HUE: 0.14 };
+    var logo = document.getElementById('logo');
+    var flash = document.getElementById('screenFlash');
 
-    logo.addEventListener('click', () => {
+    logo.addEventListener('click', function() {
       paletteIndex = (paletteIndex + 1) % palettes.length;
-      const p = palettes[paletteIndex];
+      var p = palettes[paletteIndex];
       config.SPLAT_HUE = p.SPLAT_HUE;
 
-      // Logo pulse animation
       logo.classList.remove('pulse');
-      void logo.offsetWidth; // force reflow
+      void logo.offsetWidth;
       logo.classList.add('pulse');
 
-      // Screen flash
       flash.classList.remove('active');
       void flash.offsetWidth;
       flash.classList.add('active');
 
-      // Color burst splat
       colorBurst();
     });
   </script>
